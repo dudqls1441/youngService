@@ -563,67 +563,80 @@
                                             <c:forEach items="${subwayList}" var="subway">
                                                 <div class="subway-item">
                                                     <div class="d-flex align-items-start">
-                                                        <div class="subway-line" style="background-color: ${subway.lineColor};">${subway.line}</div>
+                                                        <c:set var="lineColor" value="#0D6EFD"/>
+                                                        <c:set var="shortLineId" value="${subway.SUBWAYID}"/>
+                                                        <c:choose>
+                                                            <c:when test="${subway.SUBWAYID == '1호선'}">
+                                                                <c:set var="lineColor" value="#0052A4"/>
+                                                                <c:set var="shortLineId" value="1"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '2호선'}">
+                                                                <c:set var="lineColor" value="#00A84D"/>
+                                                                <c:set var="shortLineId" value="2"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '3호선'}">
+                                                                <c:set var="lineColor" value="#EF7C1C"/>
+                                                                <c:set var="shortLineId" value="3"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '4호선'}">
+                                                                <c:set var="lineColor" value="#00A4E3"/>
+                                                                <c:set var="shortLineId" value="4"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '5호선'}">
+                                                                <c:set var="lineColor" value="#996CAC"/>
+                                                                <c:set var="shortLineId" value="5"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '6호선'}">
+                                                                <c:set var="lineColor" value="#CD7C2F"/>
+                                                                <c:set var="shortLineId" value="6"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '7호선'}">
+                                                                <c:set var="lineColor" value="#747F00"/>
+                                                                <c:set var="shortLineId" value="7"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '8호선'}">
+                                                                <c:set var="lineColor" value="#E6186C"/>
+                                                                <c:set var="shortLineId" value="8"/>
+                                                            </c:when>
+                                                            <c:when test="${subway.SUBWAYID == '9호선'}">
+                                                                <c:set var="lineColor" value="#BDB092"/>
+                                                                <c:set var="shortLineId" value="9"/>
+                                                            </c:when>
+                                                        </c:choose>
+
+                                                        <div class="subway-line" style="background-color: ${lineColor};">${shortLineId}</div>
                                                         <div class="subway-info">
-                                                            <div class="subway-station">${subway.station}</div>
-                                                            <div class="arrival-time">${subway.arrivalTime}</div>
-                                                            <div class="arrival-direction">${subway.direction}</div>
+                                                            <div class="subway-station">${subway.STATNID}</div>
+                                                            <div class="arrival-direction">
+                                                                <c:choose>
+                                                                    <c:when test="${subway.UPDNLINE eq 'up'}">상행</c:when>
+                                                                    <c:when test="${subway.UPDNLINE eq 'down'}">하행</c:when>
+                                                                    <c:otherwise>${subway.UPDNLINE}</c:otherwise>
+                                                                </c:choose>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="text-end">
+                                                        <button class="btn btn-sm btn-outline-primary me-2"
+                                                                onclick="loadSubwayInfo('${subway.SUBWAYID}', '${subway.STATNID}', '${subway.UPDNLINE}')">
+                                                            <i class="fas fa-search me-1"></i>조회
+                                                        </button>
                                                         <button class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-bell me-1"></i>알림 설정
+                                                            <i class="fas fa-bell me-1"></i>알림
                                                         </button>
                                                     </div>
                                                 </div>
                                             </c:forEach>
                                         </c:when>
                                         <c:otherwise>
-                                            <!-- 데이터가 없을 때 보여줄 예시 데이터 -->
-                                            <div class="subway-item">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="subway-line" style="background-color: #0052A4;">2</div>
-                                                    <div class="subway-info">
-                                                        <div class="subway-station">강남역</div>
-                                                        <div class="arrival-time">3분 후 도착</div>
-                                                        <div class="arrival-direction">성수행</div>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end">
-                                                    <button class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-bell me-1"></i>알림 설정
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="subway-item">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="subway-line" style="background-color: #F06A00;">3</div>
-                                                    <div class="subway-info">
-                                                        <div class="subway-station">양재역</div>
-                                                        <div class="arrival-time">6분 후 도착</div>
-                                                        <div class="arrival-direction">대화행</div>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end">
-                                                    <button class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-bell me-1"></i>알림 설정
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="subway-item">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="subway-line" style="background-color: #996CAC;">5</div>
-                                                    <div class="subway-info">
-                                                        <div class="subway-station">광화문역</div>
-                                                        <div class="arrival-time">9분 후 도착</div>
-                                                        <div class="arrival-direction">방화행</div>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end">
-                                                    <button class="btn btn-sm btn-outline-primary">
-                                                        <i class="fas fa-bell me-1"></i>알림 설정
-                                                    </button>
-                                                </div>
+                                            <!-- 데이터가 없을 때 보여줄 내용 -->
+                                            <div class="p-4 text-center">
+                                                <i class="fas fa-info-circle text-muted mb-3" style="font-size: 2rem;"></i>
+                                                <p class="mb-0">등록된 즐겨찾기가 없습니다.</p>
+                                                <p class="text-muted">지하철 정보 페이지에서 즐겨찾기를 추가해보세요.</p>
+                                                <a href="/dashboard" class="btn btn-sm btn-primary mt-2">
+                                                    <i class="fas fa-plus me-1"></i>즐겨찾기 추가하기
+                                                </a>
                                             </div>
                                         </c:otherwise>
                                     </c:choose>
@@ -712,6 +725,15 @@
 
 <!-- 컴포넌트 로드 스크립트 -->
 <script>
+
+   function loadSubwayInfo(subwayId, stationId, updnLine) {
+        // 지하철 정보 로드 함수 - 구현이 필요합니다
+        console.log("지하철 정보 로드:", subwayId, stationId, updnLine);
+
+        // 예시: 지하철 페이지로 이동
+        window.location.href = `/dashboard?subwayId=${encodeURIComponent(subwayId)}&statnId=${encodeURIComponent(stationId)}&updnLine=${encodeURIComponent(updnLine)}&action=check`;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // 토글 기능 설정
         document.body.addEventListener('click', function(e) {
@@ -779,7 +801,9 @@ $(document).ready(function() {
         // 선택된 위치 표시 업데이트
         $('#locationDropdown').text(location);
     }
+
 });
+
 </script>
 </body>
 </html>

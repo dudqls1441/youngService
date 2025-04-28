@@ -31,7 +31,7 @@ public class SubwayServiceImpl implements SubwayService {
     }
 
     @Override
-    public List<SubwayInfoDTO> getFilteredSubwayInfo(String subwayNm, String statnId, String updnLine) {
+    public List<SubwayInfoDTO> getFilteredSubwayInfo(String subwayId, String statnId, String updnLine) {
         List<SubwayInfoDTO> result = new ArrayList<>();
 
         try {
@@ -43,7 +43,6 @@ public class SubwayServiceImpl implements SubwayService {
 
             String url = String.format("%s/%s/%s/%s/%s", baseUrl, apiKey, dataType, serviceName, stationName);
 
-            String subwayId = this.getSubwayIdByLineId(subwayNm);
             String SubWayNm = this.getSubwayIdByLineNm(subwayId);
 
             //상하행선구분
@@ -133,11 +132,10 @@ public class SubwayServiceImpl implements SubwayService {
         String apiKey = "4f6f49706164756437384c47775844";
         String url = "http://swopenapi.seoul.go.kr/api/subway/" + apiKey + "/json/stationInfo/0/1000/" + stationName;
 
-        logger.debug("요청 URL: {}", url);
-
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
+        logger.debug("url: {}", url);
         logger.debug("응답: {}", response.getBody());
 
         JSONObject json = new JSONObject(response.getBody());
@@ -161,58 +159,6 @@ public class SubwayServiceImpl implements SubwayService {
         result.put("lng", station.getString("subwayXcnts")); // X좌표
         result.put("stationName", station.getString("statnNm"));
         return result;
-    }
-
-    public static String getSubwayIdByLineId(String lineName) {
-        if (lineName == null) return null;
-
-        switch (lineName) {
-            case "1호선":
-            case "1":
-                return "1001";
-            case "2호선":
-            case "2":
-                return "1002";
-            case "3호선":
-            case "3":
-                return "1003";
-            case "4호선":
-            case "4":
-                return "1004";
-            case "5호선":
-            case "5":
-                return "1005";
-            case "6호선":
-            case "6":
-                return "1006";
-            case "7호선":
-            case "7":
-                return "1007";
-            case "8호선":
-            case "8":
-                return "1008";
-            case "9호선":
-            case "9":
-                return "1009";
-            case "중앙선":
-                return "1061";
-            case "경의중앙선":
-                return "1063";
-            case "공항철도":
-                return "1065";
-            case "경춘선":
-                return "1067";
-            case "수의분당선":
-                return "1075";
-            case "신분당선":
-                return "1077";
-            case "우이신설선":
-                return "1092";
-            case "GTX-A":
-                return "1032";
-            default:
-                return null;
-        }
     }
 
     public static String getSubwayIdByLineNm(String lineName) {
@@ -253,6 +199,10 @@ public class SubwayServiceImpl implements SubwayService {
                 return "우이신설선";
             case "1032":
                 return "GTX-A";
+            case "1071":
+                return "인천1호선";
+            case "1081":
+                return "인천2호선";
             default:
                 return null;
         }
@@ -274,11 +224,11 @@ public class SubwayServiceImpl implements SubwayService {
     }
 
     @Override
-    public List<SubwayInfoDTO> selectBookmark(Map<String, Object> bookmark) {
+    public List<SubwayInfoDTO> selectBookmark() {
         List<SubwayInfoDTO> result = new ArrayList<>();
 
         Map<String,SubwayInfoDTO> info = new LinkedHashMap<>();
-        bookmarkMapper.deleteBookmark(bookmark);
+        result = bookmarkMapper.selectBookmark();
 
         return result;
     }

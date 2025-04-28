@@ -408,10 +408,12 @@
                             </a>
                         </li>
                         <li class="nav-item dropdown">
+                            <!--
                             <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img src="/api/placeholder/80/80" alt="Profile" class="profile-thumb me-2">
                                 <span>홍길동</span>
                             </a>
+                            -->
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="#">
                                     <i class="fas fa-user me-2"></i>프로필
@@ -442,20 +444,21 @@
 
                 <!-- 즐겨찾기 섹션 -->
                 <section class="favorites-container">
-                    <h3 class="favorites-title">⭐ 즐겨 찾기</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="favorites-title mb-0">⭐ 즐겨 찾기</h3>
+                        <span class="badge bg-primary" id="bookmark-count">0개</span>
+                    </div>
+
+                    <!-- 로딩 표시 -->
+                    <div id="favorites-loading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- 즐겨찾기 목록 -->
                     <ul class="list-group" id="favoritesList">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            2호선 강남역
-                            <div>
-                                <button class="btn btn-sm btn-outline-danger me-2" onclick="removeFavorite('2호선', '강남역')">➖ 삭제</button>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            9호선 국회의사당역
-                            <div>
-                                <button class="btn btn-sm btn-outline-danger me-2" onclick="removeFavorite('9호선', '국회의사당역')">➖ 삭제</button>
-                            </div>
-                        </li>
+                        <!-- 여기에 자바스크립트로 목록이 삽입됩니다 -->
                     </ul>
                 </section>
 
@@ -466,7 +469,28 @@
                         <div class="row align-items-end g-3">
                             <div class="col-md-3">
                                 <label for="subwayId" class="form-label">지하철 노선</label>
-                                <input type="text" class="form-control" id="subwayId" name="subwayId" placeholder="예: 1호선" value="${subwayId}" required>
+                                <select class="form-select" id="subwayId" name="subwayId" required>
+                                    <option value="" disabled selected>노선을 선택하세요</option>
+                                    <option value="1001" ${subwayId == '1001' ? 'selected' : ''}>1호선</option>
+                                    <option value="1002" ${subwayId == '1002' ? 'selected' : ''}>2호선</option>
+                                    <option value="1003" ${subwayId == '1003' ? 'selected' : ''}>3호선</option>
+                                    <option value="1004" ${subwayId == '1004' ? 'selected' : ''}>4호선</option>
+                                    <option value="1005" ${subwayId == '1005' ? 'selected' : ''}>5호선</option>
+                                    <option value="1006" ${subwayId == '1006' ? 'selected' : ''}>6호선</option>
+                                    <option value="1007" ${subwayId == '1007' ? 'selected' : ''}>7호선</option>
+                                    <option value="1008" ${subwayId == '1008' ? 'selected' : ''}>8호선</option>
+                                    <option value="1009" ${subwayId == '1009' ? 'selected' : ''}>9호선</option>
+                                    <option value="1061" ${subwayId == '1061' ? 'selected' : ''}>중앙선</option>
+                                    <option value="1063" ${subwayId == '1063' ? 'selected' : ''}>경의중앙선</option>
+                                    <option value="1065" ${subwayId == '1065' ? 'selected' : ''}>공항철도</option>
+                                    <option value="1067" ${subwayId == '1067' ? 'selected' : ''}>경춘선</option>
+                                    <option value="1075" ${subwayId == '1075' ? 'selected' : ''}>수의분당선</option>
+                                    <option value="1077" ${subwayId == '1077' ? 'selected' : ''}>신분당선</option>
+                                    <option value="1092" ${subwayId == '1092' ? 'selected' : ''}>우이신설선</option>
+                                    <option value="1032" ${subwayId == '1032' ? 'selected' : ''}>GTX-A</option>
+                                    <option value="1071" ${subwayId == '1071' ? 'selected' : ''}>인천1호선</option>
+                                    <option value="1081" ${subwayId == '1081' ? 'selected' : ''}>인천2호선</option>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label for="statnId" class="form-label">지하철역 ID</label>
@@ -475,11 +499,11 @@
                             <div class="col-md-3">
                                 <label class="form-label d-block">상행 / 하행</label>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="updnLine" value="상행" checked>
+                                    <input class="form-check-input" type="radio" name="updnLine" value="up" checked>
                                     <label class="form-check-label">상행</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="updnLine" value="하행" >
+                                    <input class="form-check-input" type="radio" name="updnLine" value="down" >
                                     <label class="form-check-label">하행</label>
                                 </div>
                             </div>
@@ -582,7 +606,7 @@
                 <!-- 지도 출력 영역 -->
                 <section class="map-container">
                     <h3 class="section-title">🗺 해당 역 지도</h3>
-                    <div id="mapPlace" style="width: 100%; height: 400px;" class="border rounded">
+                    <div id="mapPlace" style="width: 100%; height: 400px; position: relative;" class="border rounded">
                         <!-- 지도 위 버튼 (현재 위치로 이동) -->
                         <div id="currentLocationBtn" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
                             <button class="btn btn-light btn-sm shadow-sm">📍 현재 위치</button>
@@ -605,23 +629,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 사이드바 토글 설정
-        document.getElementById('sidebarToggle').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('sidebar-wrapper').classList.toggle('toggled');
-            document.getElementById('content-wrapper').classList.toggle('toggled');
-        });
 
-        // 시간 업데이트 시작
-        updateCurrentTime();
-        setInterval(updateCurrentTime, 1000);
+    // 전역 변수 선언
+    let map;
+    let currentMarker;
 
-        // 각 기능 초기화
-        setupCurrentLocationButton();
-        setupSubwayForm();
-        startAutoRefresh();
-    });
 
     // 현재 검색 조건을 관리할 전역 변수
     let currentSearchParams = {
@@ -632,6 +644,56 @@
 
     // 자동 갱신 ID를 저장할 변수
     let refreshIntervalId;
+
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 사이드바 토글 설정
+        document.getElementById('sidebarToggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('sidebar-wrapper').classList.toggle('toggled');
+            document.getElementById('content-wrapper').classList.toggle('toggled');
+        });
+
+        // 지도 초기화 - 이 부분을 추가
+        initMap();
+
+        // 시간 업데이트 시작
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 5000);
+
+        // 각 기능 초기화
+        setupCurrentLocationButton();
+        setupSubwayForm();
+        startAutoRefresh();
+
+        refreshFavoritesList();
+    });
+
+    // 지도 초기화 함수 추가
+    function initMap() {
+        // 초기 위치 (서울시청)
+        const defaultLocation = new naver.maps.LatLng(37.5666805, 126.9784147);
+
+        // 지도 초기화
+        map = new naver.maps.Map('mapPlace', {
+            center: defaultLocation,
+            zoom: 15
+        });
+
+        // 초기 마커 설정
+        currentMarker = new naver.maps.Marker({
+            position: defaultLocation,
+            map: map,
+            title: '기본 위치'
+        });
+
+        // 지정된 역이 있으면 해당 위치로 이동
+        const stationId = document.getElementById('statnId').value;
+        if (stationId) {
+            getStationLocation(stationId);
+        }
+    }
 
     // 현재 시간 표시 함수
     function updateCurrentTime() {
@@ -852,7 +914,7 @@
                     currentSearchParams.updnLine
                 );
             }
-        }, 10000);
+        }, 5000);
     }
 
     // 자동 갱신 중지 함수
@@ -863,29 +925,56 @@
         }
     }
 
-    // 지하철역 위치 검색 및 지도 이동
+    // 지하철역 위치 검색 및 지도 이동 - 수정
     function getStationLocation(stationName) {
+        if (!stationName) return false;
+
+        console.log("getStationLocation 호출됨:", stationName);
+        console.log("현재 map 객체 상태:", map); // map 객체가 존재하는지 확인
+
         fetch('/subway/searchLocation?stationName=' + encodeURIComponent(stationName))
-                .then(response => response.json())
+            .then(response => {
+                console.log("API 응답 상태:", response.status);
+                return response.json();
+            })
             .then(data => {
-                if (data.success && data.lat && data.lng) {
+                console.log("받은 데이터:", data);
+
+                if (data.lat && data.lng) {
                     const latLng = new naver.maps.LatLng(data.lat, data.lng);
-                    map.setCenter(latLng);
+                    console.log("생성된 LatLng 객체:", latLng);
 
-                    if (currentMarker) currentMarker.setMap(null);
+                    try {
+                        map.setCenter(latLng);
+                        console.log("맵 중심 이동 성공");
+                    } catch (e) {
+                        console.error("맵 중심 이동 중 오류:", e);
+                    }
 
-                    currentMarker = new naver.maps.Marker({
-                        position: latLng,
-                        map: map,
-                        title: data.stationName
-                    });
+                    try {
+                        if (currentMarker) {
+                            console.log("기존 마커 제거");
+                            currentMarker.setMap(null);
+                        }
+
+                        currentMarker = new naver.maps.Marker({
+                            position: latLng,
+                            map: map,
+                            title: data.stationName
+                        });
+                        console.log("새 마커 생성 성공");
+                    } catch (e) {
+                        console.error("마커 생성 중 오류:", e);
+                    }
                 } else {
-                    console.warn("역 위치 정보를 찾을 수 없습니다.");
+                    console.warn("위치 정보 누락: lat/lng 값이 없습니다", data);
                 }
             })
             .catch(error => {
-                console.error("역 위치 검색 오류:", error);
+                console.error("API 호출 또는 처리 중 오류:", error);
             });
+
+        return true;
     }
 
     // 북마크 클릭 이벤트 처리를 위한 이벤트 위임
@@ -954,39 +1043,79 @@
 
     // 즐겨찾기 목록 새로고침
     function refreshFavoritesList() {
+        // 로딩 표시 보이기
+        document.getElementById('favorites-loading').style.display = 'block';
+
         fetch('/subway/favorites')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    updateFavoritesUI(data.favorites);
+                    updateFavoritesUI(data);
+                } else {
+                    console.error('즐겨찾기 목록 가져오기 실패:', data.error);
+                    // 오류 시 로딩 표시 숨기기
+                    document.getElementById('favorites-loading').style.display = 'none';
+                    document.getElementById('favoritesList').innerHTML =
+                        '<li class="list-group-item text-center text-danger">즐겨찾기 목록을 불러오는 중 오류가 발생했습니다</li>';
                 }
             })
             .catch(error => {
                 console.error('즐겨찾기 목록 가져오기 오류:', error);
+                // 오류 시 로딩 표시 숨기기
+                document.getElementById('favorites-loading').style.display = 'none';
+                document.getElementById('favoritesList').innerHTML =
+                    '<li class="list-group-item text-center text-danger">즐겨찾기 목록을 불러오는 중 오류가 발생했습니다</li>';
             });
     }
 
     // 즐겨찾기 목록 UI 업데이트
     function updateFavoritesUI(favorites) {
-        const favoritesList = document.getElementById('favoritesList');
+        console.log("updateFavoritesUI");
+        console.log("updateFavoritesUI favorites ::", favorites);
 
-        if (!favorites || favorites.length === 0) {
+        const favoritesList = document.getElementById('favoritesList');
+        const bookmarkCount = document.getElementById('bookmark-count');
+        const loadingIndicator = document.getElementById('favorites-loading');
+
+        // 로딩 표시 숨기기
+        loadingIndicator.style.display = 'none';
+
+        // 즐겨찾기가 없는 경우 처리
+        if (!favorites || !favorites.data || favorites.data.length === 0) {
             favoritesList.innerHTML = '<li class="list-group-item text-center text-muted">즐겨찾기 항목이 없습니다</li>';
+            bookmarkCount.textContent = '0개';
             return;
         }
 
+        // 즐겨찾기 개수 업데이트
+        bookmarkCount.textContent = favorites.data.length + '개';
+
         let html = '';
-        favorites.forEach(fav => {
+        favorites.data.forEach(fav => {
+            // 대소문자 관계없이 속성에 접근할 수 있도록 처리
+            const line = fav.SUBWAYID || fav.subwayId;
+
+            console.log("line:::"+line);
+            const station = fav.STATNID || fav.statnId;
+            const updnLine = fav.UPDNLINE || fav.updnLine;
+
+            // 라인 색상 가져오기 (함수가 존재한다면 사용)
+            const lineColor = (typeof getLineColor === 'function') ? getLineColor(line) : '#0D6EFD';
+
             html +=
                 '<li class="list-group-item d-flex justify-content-between align-items-center">' +
-                    fav.line + ' ' + fav.station +
+                    '<div>' +
+                        '<span class="line-badge me-2" style="background-color: ' + lineColor + '; color: white; padding: 3px 8px; border-radius: 4px;">' + line + '</span>' +
+                        '<span class="fw-bold">' + station + '</span>' +
+                        (updnLine ? (' <span class="badge bg-secondary ms-2">' + (updnLine === 'up' ? '상행' : '하행') + '</span>') : '') +
+                    '</div>' +
                     '<div>' +
                         '<button class="btn btn-sm btn-outline-primary me-2" ' +
-                                'onclick="loadFavorite(\'' + fav.line + '\', \'' + fav.station + '\')">' +
+                                'onclick="loadFavorite(\'' + line + '\', \'' + station + '\', \'' + updnLine + '\')">' +
                             '🔍 조회' +
                         '</button>' +
                         '<button class="btn btn-sm btn-outline-danger" ' +
-                                'onclick="removeFavorite(\'' + fav.line + '\', \'' + fav.station + '\')">' +
+                                'onclick="removeFavorite(\'' + line + '\', \'' + station + '\', \'' + updnLine + '\')">' +
                             '➖ 삭제' +
                         '</button>' +
                     '</div>' +
@@ -997,24 +1126,63 @@
     }
 
     // 즐겨찾기 항목 로드 및 조회
-    function loadFavorite(line, station) {
-        document.getElementById('subwayId').value = line;
+    function loadFavorite(line, station, updnLine) {
+        console.log("즐겨찾기 로드 - 라인:", line, "역:", station, "방향:", updnLine);
+
+        // 노선 문자열을 코드로 변환 (필요한 경우)
+        let lineCode = line;
+
+        // 호선 형태로 되어 있으면 코드로 변환
+        if (line.includes('호선') || !line.startsWith('10')) {
+            // 1호선 -> 1001, 2호선 -> 1002 등으로 변환하는 로직
+            lineCode = convertLineToCode(line);
+        }
+
+        console.log("변환된 라인 코드:", lineCode);
+
+        // 셀렉트 박스의 값 설정
+        const subwaySelect = document.getElementById('subwayId');
+
+        // 옵션이 있는지 확인
+        let optionExists = false;
+        for (let i = 0; i < subwaySelect.options.length; i++) {
+            if (subwaySelect.options[i].value === lineCode) {
+                subwaySelect.selectedIndex = i;
+                optionExists = true;
+                console.log("옵션 찾음. 인덱스:", i);
+                break;
+            }
+        }
+
+        // 옵션이 없는 경우 경고 표시
+        if (!optionExists) {
+            console.warn(`노선 코드 ${lineCode}에 해당하는 옵션을 찾을 수 없습니다.`);
+        }
+
+        // 역 이름 설정
         document.getElementById('statnId').value = station;
 
-        // 폼 제출 (조회 실행)
+        // 상행/하행 라디오 버튼 설정
+        if (updnLine === 'up') {
+            document.querySelector('input[name="updnLine"][value="up"]').checked = true;
+        } else if (updnLine === 'down') {
+            document.querySelector('input[name="updnLine"][value="down"]').checked = true;
+        }
+
+        // 조회 버튼 클릭하여 조회 실행
         const submitBtn = document.querySelector('button[value="check"]');
         if (submitBtn) {
             submitBtn.click();
         } else {
             // 직접 데이터 요청
-            fetchSubwayInfo(line, station, '상행');
+            fetchSubwayInfo(lineCode, station, updnLine);
             getStationLocation(station);
         }
     }
 
     // 즐겨찾기 삭제
-    function removeFavorite(line, station) {
-        if (confirm(`정말로 ${line} ${station}을(를) 즐겨찾기에서 삭제하시겠습니까?`)) {
+    function removeFavorite(line, station, updnLine) {
+        if (confirm("정말로 " + line + " " + station + "을(를) 즐겨찾기에서 삭제하시겠습니까?")) {
             fetch('/subway/bookmark', {
                 method: 'POST',
                 headers: {
@@ -1022,11 +1190,15 @@
                 },
                 body: 'line=' + encodeURIComponent(line) +
                       '&station=' + encodeURIComponent(station) +
+                      '&updnLine=' + encodeURIComponent(updnLine) +
                       '&action=remove'
             })
             .then(response => response.json())
             .then(data => {
+                console.log("removeFavorite::");
+                console.log("removeFavorite data {}::",data);
                 if (data.success) {
+                    // 즐겨찾기 삭제 성공 시 목록 새로고침
                     refreshFavoritesList();
                 } else {
                     alert('즐겨찾기 삭제 실패: ' + (data.error || '알 수 없는 오류'));
@@ -1041,8 +1213,6 @@
 
     // 즐겨찾기 추가
     function addToBookmarks(line, station, updnLine) {
-        console.log("addToBookmarks 함수 start");
-        console.log("addToBookmarks 함수 start {}", line, station, updnLine);
         fetch('/subway/bookmark', {
             method: 'POST',
             headers: {
@@ -1050,13 +1220,14 @@
             },
             body: 'line=' + encodeURIComponent(line) +
                   '&station=' + encodeURIComponent(station) +
-                  '&updnLine=' + encodeURIComponent(updnLine) +
+                  '&updnLine=' + encodeURIComponent(updnLine === '상행' ? 'up' : 'down') +
                   '&action=add'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`${line} ${station}이(가) 즐겨찾기에 추가되었습니다.`);
+                alert(line+"  "+station +" 이(가) 즐겨찾기에 추가되었습니다.");
+                // 즐겨찾기 추가 성공 시 목록 새로고침
                 refreshFavoritesList();
             } else {
                 alert('즐겨찾기 추가 실패: ' + (data.error || '알 수 없는 오류'));
@@ -1068,7 +1239,9 @@
         });
     }
 
-    // 현재 위치 버튼 설정 - 한 곳에서만 이벤트를 설정하도록 통합
+
+
+    // 현재 위치 버튼 설정 - 수정
     function setupCurrentLocationButton() {
         document.getElementById('currentLocationBtn').addEventListener('click', function() {
             if (navigator.geolocation) {
@@ -1077,13 +1250,13 @@
                     const lng = position.coords.longitude;
                     const userLocation = new naver.maps.LatLng(lat, lng);
 
-                    map.setCenter(userLocation);
+                    map.setCenter(userLocation); // 여기서 map 객체 사용
 
                     if (currentMarker) currentMarker.setMap(null);
 
                     currentMarker = new naver.maps.Marker({
                         position: userLocation,
-                        map: map,
+                        map: map, // 여기도 map으로 통일
                         icon: {
                             content: '<div style="background-color:#4285f4;padding:4px 8px;color:#fff;border-radius:4px;">🧍</div>',
                             size: new naver.maps.Size(22, 22),
@@ -1128,6 +1301,61 @@
     function getAddressFromCoords(lat, lng) {
         // 이 함수를 적절히 구현하거나 호출 부분을 제거해야 합니다.
         console.log('좌표(' + lat + ', ' + lng + ')의 주소를 가져오는 API가 구현되어 있지 않습니다.');
+    }
+
+// 노선명을 코드로 변환하는 함수
+function convertLineToCode(lineName) {
+    switch(lineName) {
+        case "1호선":
+        case "1":
+            return "1001";
+        case "2호선":
+        case "2":
+            return "1002";
+        case "3호선":
+        case "3":
+            return "1003";
+        case "4호선":
+        case "4":
+            return "1004";
+        case "5호선":
+        case "5":
+            return "1005";
+        case "6호선":
+        case "6":
+            return "1006";
+        case "7호선":
+        case "7":
+            return "1007";
+        case "8호선":
+        case "8":
+            return "1008";
+        case "9호선":
+        case "9":
+            return "1009";
+        case "중앙선":
+            return "1061";
+        case "경의중앙선":
+            return "1063";
+        case "공항철도":
+            return "1065";
+        case "경춘선":
+            return "1067";
+        case "수의분당선":
+            return "1075";
+        case "신분당선":
+            return "1077";
+        case "우이신설선":
+            return "1092";
+        case "GTX-A":
+            return "1032";
+        case "인천1호선":
+            return "1071";
+        case "인천2호선":
+            return "1081";
+        default:
+            return lineName; // 변환할 수 없는 경우 원래 값 반환
+        }
     }
 </script>
 </body>

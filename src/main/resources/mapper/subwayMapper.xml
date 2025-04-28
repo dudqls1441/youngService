@@ -34,7 +34,7 @@
             SUBWAYID,
             STATNID,
             UPDNLINE,
-            CREATEDAT
+            TO_CHAR(CREATEDAT,'YYYY-MM-DD HH:mm:ss') AS CREATEDAT
         FROM SUBWAY_BOOKMARK
     </select>
 </mapper>

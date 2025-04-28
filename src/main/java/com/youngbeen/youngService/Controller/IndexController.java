@@ -1,6 +1,8 @@
 package com.youngbeen.youngService.Controller;
 
+import com.youngbeen.youngService.DTO.SubwayInfoDTO;
 import com.youngbeen.youngService.DTO.WeatherDTO;
+import com.youngbeen.youngService.Service.SubwayService;
 import com.youngbeen.youngService.Service.WeatherService;
 import com.youngbeen.youngService.Service.impl.SubwayServiceImpl;
 import com.youngbeen.youngService.Service.StockService;  // 추가
@@ -33,6 +35,8 @@ public class IndexController {
     @Autowired
     private WeatherService weatherService;
 
+    @Autowired
+    private SubwayService subwayService;
 
     @GetMapping(value="/")
     public String home(
@@ -58,8 +62,14 @@ public class IndexController {
         // 날씨 정보 가져오기
         WeatherDTO weather = weatherService.getWeatherInfo(location);
 
+        Map<String, Object> response = new HashMap<>();
+
+        List<SubwayInfoDTO> subwayList = subwayService.selectBookmark();
+        logger.debug("resultList::{}",subwayList);
+
         // 모델에 데이터 추가
         model.addAttribute("stockList", favoriteStocks);
+        model.addAttribute("subwayList", subwayList);
         model.addAttribute("locationList", weatherService.getLocationList());
         model.addAttribute("selectedLocation", location);
         model.addAttribute("weather", weather);
