@@ -1,0 +1,63 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.youngbeen'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Boot 기본 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// JSP 관련 의존성
+	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+	implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0'
+	implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+
+	// MyBatis
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+	// Oracle JDBC 관련 의존성
+	implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+	implementation 'com.oracle.database.nls:orai18n:23.3.0.23.09'  // 이 라인을 추가하세요
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+	// 개발 도구
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// JSON 파싱
+	implementation 'org.json:json:20210307'
+
+	// Spring Security 태그 라이브러리 (사용하지 않는다면 이 줄은 삭제 가능)
+	implementation 'org.springframework.security:spring-security-taglibs'
+
+	// 테스트 관련
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

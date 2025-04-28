@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.youngbeen.youngService.Mapper.BookmarkMapper">
+<!--    &lt;!&ndash;TODO : 전체적으로 수정필요 &ndash;&gt;>-->
+
+    <update id="updateBookmark" parameterType="Map">
+        INSERT INTO subway_bookmark (subwayId, statnId, updnLine, userId, createdAt)
+        VALUES (#{subwayId}, #{statnId}, #{updnLine}, #{userId}, TO_CHAR(SYSDATE, 'YYYY-MM-DD'))
+    </update>
+
+    <delete id="deleteBookmark" parameterType="Map">
+        DELETE FROM subway_bookmark
+        WHERE subwayId LIKE '%'  || #{subwayId}  || '%'
+        AND statnId LIKE '%'  || #{statnId}  || '%'
+        AND updnLine = #{updnLine}
+        AND userId = #{userId}
+    </delete>
+
+    <select id="checkBookmark" parameterType="Map" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM subway_bookmark
+        WHERE subwayId LIKE '%'  || #{subwayId}  || '%'
+            AND statnId LIKE '%'  || #{statnId}  || '%'
+            AND updnLine = #{updnLine}
+            AND userId = #{userId}
+    </select>
+
+    <select id="selectBookmark" parameterType="Map" resultType="Map">
+        SELECT
+            USERID,
+            SUBWAYID,
+            STATNID,
+            UPDNLINE,
+            CREATEDAT
+        FROM SUBWAY_BOOKMARK
+    </select>
+</mapper>

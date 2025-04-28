@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.youngbeen.youngService.Mapper.StockInfoMapper">
+<!--    &lt;!&ndash;TODO : 전체적으로 수정필요 &ndash;&gt;>-->
+        <select id="findAll"  resultType="Map">
+            SELECT
+            SRTNCD,
+            ISINCD,
+            MRKTCTG,
+            ITMSNM,
+            CRNO,
+            CORPNM,
+            BASDT
+            FROM
+            STOCK_INFO
+        </select>
+
+        <!-- 전체 주식 데이터 수 조회 -->
+        <select id="countAll" resultType="long">
+            SELECT COUNT(*) FROM STOCK_INFO
+        </select>
+
+        <!-- 페이징 처리된 전체 주식 목록 조회 -->
+        <select id="findAllWithPaging" resultType="Map">
+            SELECT *
+            FROM (
+            SELECT
+            SI.SRTNCD,
+            SI.ISINCD,
+            SI.MRKTCTG,
+            SI.ITMSNM,
+            SI.CRNO,
+            SI.CORPNM,
+            SI.BASDT,
+            CASE
+                WHEN UFS.FAVORITE_ID IS NOT NULL THEN 'true'
+                ELSE 'false'
+            END AS IS_FAVORITE,
+            ROW_NUMBER() OVER (ORDER BY SI.ITMSNM) AS RN
+            FROM
+            STOCK_INFO SI
+                LEFT OUTER JOIN USER_FAVORITE_STOCKS UFS
+                ON SI.SRTNCD = UFS.FAVORITE_ID
+            )
+            WHERE RN > #{offset} AND RN &lt; #{offset} + #{limit}
+        </select>
+
+        <!-- 즐겨찾기된 주식 목록 조회 -->
+        <select id="searchStockfavorites" resultType="Map">
+            SELECT
+                SI.SRTNCD,
+                SI.ISINCD,
+                SI.MRKTCTG,
+                SI.ITMSNM,
+                SI.CRNO,
+                SI.CORPNM,
+                SI.BASDT,
+                SP.CLPR,
+                SP.VS,
+                SP.FLTRT,
+                SP.MKP,
+                SP.HIPR,
+                SP.LOPR,
+                SP.TRQU,
+                SP.TRPRC,
+                SP.LSTGSTCNT,
+                SP.MRKTTOTAMT
+            FROM
+            STOCK_INFO SI
+            INNER JOIN USER_FAVORITE_STOCKS UFS
+            ON SI.SRTNCD = UFS.FAVORITE_ID
+            INNER JOIN STOCK_PRICE SP
+            ON SI.ISINCD = SP.ISINCD
+            WHERE UFS.USER_ID=#{userId}
+            AND SP.BASDT = (SELECT MAX(BASDT) FROM STOCK_PRICE)
+        </select>
+
+        <select id="findByStockNameContainingIgnoreCaseOrStockCodeContainingIgnoreCase"  parameterType="String" resultType="Map">
+            SELECT
+            SRTNCD,
+            ISINCD,
+            MRKTCTG,
+            ITMSNM,
+            CRNO,
+            CORPNM,
+            BASDT
+            FROM
+            STOCK_INFO
+            WHERE
+            SRTNCD LIKE '%' || #{stockCode} || '%'
+            OR ITMSNM LIKE '%' || #{stockCode} || '%'
+        </select>
+
+        <!-- 키워드로 검색된 주식 데이터 수 조회 -->
+        <select id="countByKeyword" parameterType="String" resultType="long">
+            SELECT COUNT(*)
+            FROM STOCK_INFO
+            WHERE
+            SRTNCD LIKE '%' || #{keyword} || '%'
+            OR ITMSNM LIKE '%' || #{keyword} || '%'
+        </select>
+
+        <!-- 페이징 처리된 키워드 검색 결과 조회 -->
+        <select id="findByKeywordWithPaging" resultType="Map">
+            SELECT *
+            FROM (
+            SELECT
+            SI.SRTNCD,
+            SI.ISINCD,
+            SI.MRKTCTG,
+            SI.ITMSNM,
+            SI.CRNO,
+            SI.CORPNM,
+            SI.BASDT,
+            CASE
+                WHEN UFS.FAVORITE_ID IS NOT NULL THEN 'true'
+                ELSE 'false'
+            END AS IS_FAVORITE,
+            ROW_NUMBER() OVER (ORDER BY SI.ITMSNM) AS RN
+            FROM
+            STOCK_INFO SI
+            LEFT OUTER JOIN USER_FAVORITE_STOCKS UFS
+            ON SI.SRTNCD = UFS.FAVORITE_ID
+            WHERE
+            SI.SRTNCD LIKE '%' || #{keyword} || '%'
+            OR SI.ITMSNM LIKE '%' || #{keyword} || '%'
+            )
+            WHERE RN > #{offset} AND RN &lt; #{offset} + #{limit}
+        </select>
+
+        <select id="findByStockCode"  parameterType="Map" resultType="Map">
+            SELECT
+            SI.SRTNCD,
+            SI.ISINCD,
+            SI.MRKTCTG,
+            SI.ITMSNM,
+            SI.CRNO,
+            SI.CORPNM,
+            TO_CHAR(SP.BASDT, 'YYYY-MM-DD'),
+            SP.CLPR,
+            SP.VS,
+            SP.FLTRT,
+            SP.MKP,
+            SP.HIPR,
+            SP.LOPR,
+            SP.TRQU,
+            SP.TRPRC,
+            SP.LSTGSTCNT,
+            SP.MRKTTOTAMT
+            FROM
+            STOCK_INFO SI
+            INNER JOIN STOCK_PRICE SP
+            ON SI.ISINCD = SP.ISINCD
+            WHERE
+            SI.SRTNCD LIKE '%' || #{keyword} || '%'
+            OR SI.ITMSNM LIKE '%' || #{keyword} || '%'
+            AND SP.BASDT = #{basedt}
+        </select>
+
+        <select id="searchStockDetails" parameterType="map" resultType="map">
+            SELECT
+            SI.SRTNCD,
+            SI.ISINCD,
+            SI.MRKTCTG,
+            SI.ITMSNM,
+            SI.CRNO,
+            SI.CORPNM,
+            SP.BASDT,
+            SP.CLPR,
+            SP.VS,
+            SP.FLTRT,
+            SP.MKP,
+            SP.HIPR,
+            SP.LOPR,
+            SP.TRQU,
+            SP.TRPRC,
+            SP.LSTGSTCNT,
+            SP.MRKTTOTAMT
+            FROM
+            STOCK_INFO SI
+            INNER JOIN STOCK_PRICE SP
+            ON SI.ISINCD = SP.ISINCD
+            <where>
+                <!-- stockCode 조건: 값이 있을 때만 LIKE 조건 적용 -->
+                <if test="stockCode != null and stockCode != ''">
+                    AND SI.SRTNCD LIKE '%' || #{stockCode} || '%'
+                </if>
+                <!-- stockName 조건: 값이 있을 때만 두 컬럼에 대해 LIKE 조건 적용 -->
+                <if test="stockName != null and stockName != ''">
+                    AND (
+                    SI.ISINCD LIKE '%' || #{stockName} || '%'
+                    OR SI.ITMSNM LIKE '%' || #{stockName} || '%'
+                    )
+                </if>
+                <!-- marketType 조건: 값이 있을 때만 등치 조건 적용 -->
+                <if test="marketType != null and marketType != ''">
+                    AND SI.MRKTCTG = #{marketType}
+                </if>
+                <!-- startDate 조건: 값이 있을 때만 시작일 조건 적용 -->
+                <if test="startDate != null and startDate != ''">
+                    AND SP.BASDT &gt;= #{startDate}
+                </if>
+                <!-- endDate 조건: 값이 있을 때만 종료일 조건 적용 -->
+                <if test="endDate != null and endDate != ''">
+                    AND SP.BASDT &lt;= #{endDate}
+                </if>
+                <!-- sector 조건: 값이 있을 때만 등치 조건 적용 -->
+                <if test="sector != null and sector != ''">
+                    AND SI.CORPNM = #{sector}
+                </if>
+            </where>
+        </select>
+
+        <!-- 상세 검색 조건으로 검색된 주식 데이터 수 조회 -->
+        <select id="countStockDetailsWithConditions" parameterType="map" resultType="long">
+            SELECT COUNT(*)
+            FROM
+            STOCK_INFO SI
+            INNER JOIN STOCK_PRICE SP
+            ON SI.ISINCD = SP.ISINCD
+            <where>
+                <!-- stockCode 조건: 값이 있을 때만 LIKE 조건 적용 -->
+                <if test="stockCode != null and stockCode != ''">
+                    AND SI.SRTNCD LIKE '%' || #{stockCode} || '%'
+                </if>
+                <!-- stockName 조건: 값이 있을 때만 두 컬럼에 대해 LIKE 조건 적용 -->
+                <if test="stockName != null and stockName != ''">
+                    AND (
+                    SI.ISINCD LIKE '%' || #{stockName} || '%'
+                    OR SI.ITMSNM LIKE '%' || #{stockName} || '%'
+                    )
+                </if>
+                <!-- marketType 조건: 값이 있을 때만 등치 조건 적용 -->
+                <if test="marketType != null and marketType != ''">
+                    AND SI.MRKTCTG = #{marketType}
+                </if>
+                <!-- startDate 조건: 값이 있을 때만 시작일 조건 적용 -->
+                <if test="startDate != null and startDate != ''">
+                    AND SP.BASDT &gt;= #{startDate}
+                </if>
+                <!-- endDate 조건: 값이 있을 때만 종료일 조건 적용 -->
+                <if test="endDate != null and endDate != ''">
+                    AND SP.BASDT &lt;= #{endDate}
+                </if>
+                <!-- sector 조건: 값이 있을 때만 등치 조건 적용 -->
+                <if test="sector != null and sector != ''">
+                    AND SI.CORPNM = #{sector}
+                </if>
+            </where>
+        </select>
+
+        <!-- 페이징 처리된 상세 검색 결과 조회 -->
+        <select id="searchStockDetailsWithPaging" parameterType="map" resultType="map">
+            SELECT *
+            FROM (
+            SELECT
+            SI.SRTNCD,
+            SI.ISINCD,
+            SI.MRKTCTG,
+            SI.ITMSNM,
+            SI.CRNO,
+            SI.CORPNM,
+            TO_CHAR(SP.BASDT,'YYYY-MM-DD') as BASDT,
+            <!--SP.BASDT, -->
+            SP.CLPR,
+            SP.VS,
+            SP.FLTRT,
+            SP.MKP,
+            SP.HIPR,
+            SP.LOPR,
+            SP.TRQU,
+            SP.TRPRC,
+            SP.LSTGSTCNT,
+            SP.MRKTTOTAMT,
+            ROW_NUMBER() OVER (ORDER BY SP.BASDT DESC, SI.ITMSNM) AS RN
+            FROM
+            STOCK_INFO SI
+            INNER JOIN STOCK_PRICE SP ON SI.ISINCD = SP.ISINCD
+            <where>
+                <if test="stockCode != null and stockCode != ''">
+                    AND SI.SRTNCD LIKE '%' || #{stockCode} || '%'
+                </if>
+                <if test="stockName != null and stockName != ''">
+                    AND (
+                    SI.ISINCD LIKE '%' || #{stockName} || '%'
+                    OR SI.ITMSNM LIKE '%' || #{stockName} || '%'
+                    )
+                </if>
+                <if test="marketType != null and marketType != ''">
+                    AND SI.MRKTCTG = #{marketType}
+                </if>
+                <if test="startDate != null and startDate != ''">
+                    AND SP.BASDT &gt;= #{startDate}
+                </if>
+                <if test="endDate != null and endDate != ''">
+                    AND SP.BASDT &lt;= #{endDate}
+                </if>
+                <if test="sector != null and sector != ''">
+                    AND SI.CORPNM = #{sector}
+                </if>
+            </where>
+            )
+            WHERE RN &gt; #{offset} AND RN &lt;= #{offset} + #{limit}
+        </select>
+
+        <select id="countByMarketType"  parameterType="String" resultType="Long">
+            SELECT COUNT(1) AS CNT
+            FROM STOCK_INFO
+            WHERE MRKTCTG = #{MRKTCTG}
+        </select>
+
+    <insert id="addFavoriteStock" parameterType="Map">
+        INSERT INTO USER_FAVORITE_STOCKS (
+            FAVORITE_ID,
+            USER_ID,
+            ADD_DATE
+        ) VALUES (
+        #{srtnCd},
+        #{userId},
+        TO_CHAR(SYSDATE, 'YYYY-MM-DD'))
+    </insert>
+
+    <delete id="deleteFavoriteStock" parameterType="Map">
+        DELETE FROM USER_FAVORITE_STOCKS
+        WHERE
+        FAVORITE_ID = #{srtnCd}
+        AND USER_ID = #{userId}
+    </delete>
+
+</mapper>
