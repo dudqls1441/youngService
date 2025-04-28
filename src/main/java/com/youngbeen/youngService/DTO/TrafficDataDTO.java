@@ -1,7 +1,5 @@
 package com.youngbeen.youngService.DTO;
 
-import java.sql.Timestamp;
-
 public class TrafficDataDTO {
     private Long id;
     private String exDivName;

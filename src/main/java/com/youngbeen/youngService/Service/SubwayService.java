@@ -1,7 +1,6 @@
 package com.youngbeen.youngService.Service;
 
 import com.youngbeen.youngService.DTO.SubwayInfoDTO;
-import com.youngbeen.youngService.Mapper.BookmarkMapper;
 
 import java.util.List;
 import java.util.Map;

@@ -1,10 +1,8 @@
 package com.youngbeen.youngService.Service.impl;
 
-import com.youngbeen.youngService.Controller.StockController;
 import com.youngbeen.youngService.DTO.ForecastDTO;
 import com.youngbeen.youngService.DTO.WeatherDTO;
 import com.youngbeen.youngService.Service.WeatherService;
-import jakarta.annotation.PostConstruct;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -12,16 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
