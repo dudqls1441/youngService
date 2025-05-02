@@ -1,5 +1,6 @@
 package com.youngbeen.youngService.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,24 +8,57 @@ import lombok.*;
 @Data
 public class StockInfoDTO {
 
+    @JsonProperty("SRTNCD")
     private String srtncd;         // 종목코드
+
+    @JsonProperty("ISINCD")
     private String isinCd;         // ISIN 코드
+
+    @JsonProperty("MRKTCTG")
     private String mrktCtg;        // 시장 구분 (KOSPI, KOSDAQ 등)
+
+    @JsonProperty("ITMSNM")
     private String itmsNm;         // 종목명
+
+    @JsonProperty("CRNO")
     private String crno;           // 법인등록번호
+
+    @JsonProperty("CORPNM")
     private String corpNm;         // 법인명
+
+    @JsonProperty("ISFAVORITE")
     private boolean isFavorite;
 
+    @JsonProperty("BASDT")
     private String basDt;          // 기준일자 (yyyyMMdd 형태면 String, LocalDate로 바꿀 수도 있음)
+
+    @JsonProperty("CLPR")
     private int clpr;              // 종가
+
+    @JsonProperty("VS")
     private int vs;                // 전일 대비
+
+    @JsonProperty("FLTRT")
     private double fltRt;          // 등락률 (%)
+
+    @JsonProperty("MKP")
     private int mkp;               // 시가
+    @JsonProperty("HIPR")
     private int hipr;              // 고가
+
+    @JsonProperty("LOPR")
     private int lopr;              // 저가
+
+    @JsonProperty("TRQU")
     private long trqu;             // 거래량
+
+    @JsonProperty("TRPRC")
     private long trPrc;            // 거래대금
+
+    @JsonProperty("LSTGSTCNT")
     private long lstgStCnt;        // 상장주식수
+
+    @JsonProperty("MRKTOTAMT")
     private long mrktTotAmt;       // 시가총액
 
     public String getSrtncd() {

@@ -92,5 +92,10 @@ public class IndexController {
         return "stockinfo";
     }
 
+    @GetMapping(value="/performance")
+    public String toPerformance() {
+        return "performance";
+    }
+
 
 }

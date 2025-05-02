@@ -418,6 +418,9 @@
             <a class="list-group-item list-group-item-action list-group-item-light" href="${pageContext.request.contextPath}/analysis">
                 <i class="fas fa-chart-pie me-2"></i>분석
             </a>
+            <a class="list-group-item list-group-item-action list-group-item-light" href="/performance">
+                <i class="fas fa-chart-pie me-2"></i>주식 비교
+            </a>
         </div>
     </div>
 
@@ -725,15 +728,6 @@
 
 <!-- 컴포넌트 로드 스크립트 -->
 <script>
-
-   function loadSubwayInfo(subwayId, stationId, updnLine) {
-        // 지하철 정보 로드 함수 - 구현이 필요합니다
-        console.log("지하철 정보 로드:", subwayId, stationId, updnLine);
-
-        // 예시: 지하철 페이지로 이동
-        window.location.href = `/dashboard?subwayId=${encodeURIComponent(subwayId)}&statnId=${encodeURIComponent(stationId)}&updnLine=${encodeURIComponent(updnLine)}&action=check`;
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
         // 토글 기능 설정
         document.body.addEventListener('click', function(e) {
@@ -745,65 +739,71 @@
         });
     });
 
-$(document).ready(function() {
-    // 드롭다운 메뉴 항목 클릭 시 이벤트 처리
-    $('.dropdown-item').click(function(e) {
-        e.preventDefault();
-        const location = $(this).text();
+    $(document).ready(function() {
+        // 드롭다운 메뉴 항목 클릭 시 이벤트 처리
+        $('.dropdown-item').click(function(e) {
+            e.preventDefault();
+            const location = $(this).text();
 
-        console.log("location");
-        console.log(location);
+            console.log("location");
+            console.log(location);
 
-        // AJAX 요청으로 날씨 정보만 업데이트
-        $.ajax({
-            url: '/api/weather',
-            data: { location: location },
-            dataType: 'json',  // 명시적으로 JSON 형식 지정
-            success: function(data) {
-                // 날씨 정보 업데이트
-                updateWeatherUI(data, location);
-            },
-            error: function(xhr, status, error) {
-                console.error("AJAX 요청 실패:", error);
-            }
-        });
-    });
-
-    function updateWeatherUI(data, location) {
-        console.log("weather::", data);
-        const weather = data.weathers;
-
-        // 여기서 날씨 정보를 표시하는 UI 요소들을 업데이트
-        $('.weather-temp').text(weather.temperature + '°');
-        $('.weather-location').text(weather.district + ', ' + weather.city);
-        $('.weather-condition').text(weather.condition + ' / 최고 ' + weather.maxTemp + '° 최저 ' + weather.minTemp + '°');
-        $('.weather-icon i').attr('class', 'fas fa-' + weather.icon);
-
-        // 예보 업데이트
-        const $forecastCols = $('.row.text-center.mt-3 .col');
-        if (weather.forecast) {
-            weather.forecast.forEach((forecast, index) => {
-                if (index < $forecastCols.length) {
-                    console.log("테스트");
-                    console.log(forecast.timeOfDay); // ${forecast.timeOfDay} 대신 forecast.timeOfDay 사용
-                    $forecastCols.eq(index).html(
-                        '<div class="small text-muted">' + forecast.timeOfDay + '</div>' +
-                        '<div><i class="fas fa-' + forecast.icon + '"></i> ' + forecast.temperature + '°</div>'
-                    );
+            // AJAX 요청으로 날씨 정보만 업데이트
+            $.ajax({
+                url: '/api/weather',
+                data: { location: location },
+                dataType: 'json',  // 명시적으로 JSON 형식 지정
+                success: function(data) {
+                    // 날씨 정보 업데이트
+                    updateWeatherUI(data, location);
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX 요청 실패:", error);
                 }
             });
+        });
+
+        function updateWeatherUI(data, location) {
+            console.log("weather::", data);
+            const weather = data.weathers;
+
+            // 여기서 날씨 정보를 표시하는 UI 요소들을 업데이트
+            $('.weather-temp').text(weather.temperature + '°');
+            $('.weather-location').text(weather.district + ', ' + weather.city);
+            $('.weather-condition').text(weather.condition + ' / 최고 ' + weather.maxTemp + '° 최저 ' + weather.minTemp + '°');
+            $('.weather-icon i').attr('class', 'fas fa-' + weather.icon);
+
+            // 예보 업데이트
+            const $forecastCols = $('.row.text-center.mt-3 .col');
+            if (weather.forecast) {
+                weather.forecast.forEach((forecast, index) => {
+                    if (index < $forecastCols.length) {
+                        console.log("테스트");
+                        console.log(forecast.timeOfDay); // ${forecast.timeOfDay} 대신 forecast.timeOfDay 사용
+                        $forecastCols.eq(index).html(
+                            '<div class="small text-muted">' + forecast.timeOfDay + '</div>' +
+                            '<div><i class="fas fa-' + forecast.icon + '"></i> ' + forecast.temperature + '°</div>'
+                        );
+                    }
+                });
+            }
+
+            // 습도, 풍속 업데이트
+            $('.weather-extra div:eq(0)').html(`<i class="fas fa-tint me-1"></i>습도 ${weather.humidity}%`);
+            $('.weather-extra div:eq(1)').html(`<i class="fas fa-wind me-1"></i>풍속 ${weather.windSpeed}m/s`);
+
+            // 선택된 위치 표시 업데이트
+            $('#locationDropdown').text(location);
         }
+    });
 
-        // 습도, 풍속 업데이트
-        $('.weather-extra div:eq(0)').html(`<i class="fas fa-tint me-1"></i>습도 ${weather.humidity}%`);
-        $('.weather-extra div:eq(1)').html(`<i class="fas fa-wind me-1"></i>풍속 ${weather.windSpeed}m/s`);
+   function loadSubwayInfo(subwayId, stationId, updnLine) {
+        // 지하철 정보 로드 함수 - 구현이 필요합니다
+        console.log("지하철 정보 로드:", subwayId, stationId, updnLine);
 
-        // 선택된 위치 표시 업데이트
-        $('#locationDropdown').text(location);
+        // 예시: 지하철 페이지로 이동
+
     }
-
-});
-
 </script>
 </body>
 </html>

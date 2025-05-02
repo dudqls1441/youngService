@@ -306,6 +306,53 @@
             WHERE RN &gt; #{offset} AND RN &lt;= #{offset} + #{limit}
         </select>
 
+        <!-- 주식 성과 비교 검색 결과 조회 -->
+        <select id="selcetPerformance" parameterType="map" resultType="map">
+            SELECT
+                SI.CORPNM AS COMPANY_NAME,
+                SI.SRTNCD AS STOCK_CODE,
+                SI.MRKTCTG AS MARKET_CATEGORY,
+                FIRST_DAY.BASDT AS START_DATE,
+                FIRST_DAY.CLPR AS START_PRICE,
+                LAST_DAY.BASDT AS END_DATE,
+                LAST_DAY.CLPR AS END_PRICE,
+                ROUND((LAST_DAY.CLPR - FIRST_DAY.CLPR) / FIRST_DAY.CLPR * 100, 2) AS PRICE_CHANGE_PCT
+            FROM
+                STOCK_INFO SI
+            JOIN
+                (SELECT
+                    SP.ISINCD,
+                    SP.BASDT,
+                    SP.CLPR
+                FROM
+                    STOCK_PRICE SP
+                WHERE
+                    SP.BASDT = (SELECT MIN(BASDT) FROM STOCK_PRICE
+                    WHERE ISINCD = SP.ISINCD
+                    AND BASDT BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD'))
+                ) FIRST_DAY ON SI.ISINCD = FIRST_DAY.ISINCD
+            JOIN
+                (SELECT
+                    SP.SRTNCD,
+                    SP.BASDT,
+                    SP.CLPR,
+                    SP.ISINCD
+                FROM
+                    STOCK_PRICE SP
+                WHERE
+                    SP.BASDT = (SELECT MAX(BASDT) FROM STOCK_PRICE
+                    WHERE ISINCD = SP.ISINCD
+                    AND BASDT BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD'))
+                ) LAST_DAY ON SI.ISINCD = LAST_DAY.ISINCD
+            WHERE
+            1=1
+            <if test="marketType != null and marketType != 'ALL'">
+                AND SI.MRKTCTG = #{marketType}
+            </if>
+            ORDER BY
+            PRICE_CHANGE_PCT DESC
+        </select>
+
         <select id="countByMarketType"  parameterType="String" resultType="Long">
             SELECT COUNT(1) AS CNT
             FROM STOCK_INFO

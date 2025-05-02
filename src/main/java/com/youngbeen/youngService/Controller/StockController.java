@@ -1,5 +1,6 @@
 package com.youngbeen.youngService.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youngbeen.youngService.DTO.StockInfoDTO;
 import com.youngbeen.youngService.Mapper.MarketSummary;
 import com.youngbeen.youngService.Service.StockService;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -177,6 +179,42 @@ public class StockController {
         return response;
     }
 
+    /**
+     * 주식 성과 비교를 처리하는 메소드
+     */
+    @GetMapping("/performance")
+    @ResponseBody
+    public Map<String, Object> getPerformance(
+            @RequestParam(value = "marketType", required = false) String marketType,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate,
+            HttpSession session,
+            Model model) {
+        logger.debug("/stock/performance 요청 -");
+
+        Map<String, Object> requestMap = new HashMap<>();
+        // 페이징 정보 추가
+        requestMap.put("marketType", marketType);
+        requestMap.put("startDate", startDate);
+        requestMap.put("endDate", endDate);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        List<StockInfoDTO> resultArray = null;
+        resultMap = (HashMap) stockService.getPerformance(requestMap);
+
+        if(!resultMap.isEmpty()){
+            resultArray = (List<StockInfoDTO>) resultMap.get("results");
+        }
+
+        logger.debug("resultArray {} :::", resultArray);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", resultArray);
+
+        return response;
+    }
+
 
     /**
      * 종목 검색 결과를 처리하는 메소드
@@ -212,11 +250,20 @@ public class StockController {
         Map<String, Object> resultMap = stockService.searchStockDetailsWithPaging(requestMap);
 
         List<StockInfoDTO> detailSearchResults = (List<StockInfoDTO>) resultMap.get("results");
-        logger.debug("detailSearchResults :: {} ", detailSearchResults.get(0));
+        logger.debug("detailSearchResults :: {} ", detailSearchResults.size() > 0 ? detailSearchResults.get(0) : "데이터 없음");
+
         List<StockInfoDTO> allDetailSearchResults = stockService.searchStockDetails(requestMap);
 
-        long totalCount = (long) resultMap.get("totalCount");
+        // JSON으로 변환 (JavaScript에서 사용하기 위함)
+        String allDetailSearchResultsJson = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            allDetailSearchResultsJson = objectMapper.writeValueAsString(allDetailSearchResults);
+        } catch (Exception e) {
+            logger.error("JSON 변환 중 오류 발생", e);
+        }
 
+        long totalCount = (long) resultMap.get("totalCount");
         // 총 페이지 수 계산
         int totalPages = (int) Math.ceil((double) totalCount / size);
 
@@ -227,7 +274,7 @@ public class StockController {
         session.setAttribute("fullSearchResults", detailSearchResults);
 
         model.addAttribute("detailSearchResults", detailSearchResults);
-        model.addAttribute("allDetailSearchResults", allDetailSearchResults);
+        model.addAttribute("allDetailSearchResultsJson", allDetailSearchResultsJson);
         model.addAttribute("detailTotalPages", totalPages > 0 ? totalPages : 1);
         model.addAttribute("detailCurrentPage", page);
         model.addAttribute("pageSize", size);
@@ -237,17 +284,39 @@ public class StockController {
     }
 
     @PostMapping("/analysis")
-    @ResponseBody
-    public ResponseEntity<?> analyzeDetailSearchResults(@RequestBody List<StockInfoDTO> detailSearchResults,HttpSession session) {
-        @SuppressWarnings("unchecked")
-        List<StockInfoDTO> fullResults = (List<StockInfoDTO>) session.getAttribute("fullSearchResults");
+    public ResponseEntity<Map<String, Object>> analyzeStockData(@RequestBody List<StockInfoDTO> stockDataList) {
+        Map<String, Object> response = new HashMap<>();
 
+        try {
+            // 데이터 유효성 검증
+            if (stockDataList == null || stockDataList.isEmpty()) {
+                response.put("message", "분석 실패");
+                response.put("errorMessage", "분석할 데이터가 없습니다.");
+                return ResponseEntity.badRequest().body(response);  // 400 Bad Request
+            }
 
-        // 분석 로직 수행
-        System.out.println("받은 데이터 수: " + fullResults);
+            logger.info("분석 요청 데이터 수: {}", stockDataList.size());
+            logger.debug("분석 요청 데이터: {}", stockDataList);  // 민감한 정보는 debug 레벨로
 
-        // 예시 응답
-        return ResponseEntity.ok(Map.of("message", "분석 성공", "count", detailSearchResults.size()));
+            // 분석 서비스 호출 - 데이터를 직접 전달
+            Map<String, Object> requestMap = new HashMap<>();
+            requestMap.put("data", stockDataList);
+            Map<String, Object> analysisResult = stockService.analyzeStockData(requestMap);
+
+            // 성공 응답
+            response.put("message", "분석 성공");
+            response.put("count", stockDataList.size());
+            response.put("result", analysisResult);
+            //response.put("redirectUrl", "/stock/analysis-result");
+
+            return ResponseEntity.ok(response);  // 200 OK
+
+        } catch (Exception e) {
+            logger.error("데이터 분석 중 오류 발생", e);
+            response.put("message", "분석 실패");
+            response.put("errorMessage", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);  // 500 Internal Server Error
+        }
     }
 
     @PostMapping("/add-favorite")

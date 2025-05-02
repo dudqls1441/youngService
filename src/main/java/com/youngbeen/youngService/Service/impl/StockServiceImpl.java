@@ -1,5 +1,7 @@
 package com.youngbeen.youngService.Service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youngbeen.youngService.DTO.StockInfoDTO;
 import com.youngbeen.youngService.Mapper.MarketSummary;
 import com.youngbeen.youngService.Mapper.StockInfoMapper;
@@ -10,10 +12,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 @Service
 public class StockServiceImpl implements StockService {
@@ -24,6 +36,18 @@ public class StockServiceImpl implements StockService {
     private final StockInfoMapper stockInfoMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(StockServiceImpl.class);
+
+    @Value("${python.script.path}")
+    private String pythonScriptPath;
+
+    @Value("${python.executable}")
+    private String pythonExecutable;
+
+    @Value("${analysis.results.dir}")
+    private String analysisResultsDir;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
 
     @Autowired
@@ -161,6 +185,85 @@ public class StockServiceImpl implements StockService {
         return result;
     }
 
+
+    @Override
+    public Map<String, Object> getPerformance(Map<String, Object> map) {
+        logger.debug("map ::{}",map);
+
+        Map<String, Object> result = new HashMap<>();
+
+        // 페이징된 검색 결과 조회
+        List<StockInfoDTO> pagedResults = stockInfoMapper.selcetPerformance(map);
+
+        result.put("results", pagedResults);
+
+        return result;
+    }
+
+
+    @Override
+    public Map<String, Object> analyzeStockData(Map<String, Object> map) {
+        try {
+            List<StockInfoDTO> responseData = (List<StockInfoDTO>) map.get("data");
+            logger.debug("responseData : {}", responseData);
+
+            // Flask API로 데이터 전송하여 분석 결과 받기
+            Map<String, Object> result = executeFlaskAnalysis(responseData);
+            return result;
+
+        } catch (Exception e) {
+            logger.error("주식 데이터 분석 중 오류 발생", e);
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
+
+    private Map<String, Object> executeFlaskAnalysis(List<StockInfoDTO> stockData) throws Exception {
+        logger.info("Flask API를 통한 주식 데이터 분석 시작");
+
+        // Flask 서버 URL 설정
+        //String flaskApiUrl = "http://192.168.136.128:5000/analyze-stock1"; // 환경 설정으로 관리할 수 있음
+        String flaskApiUrl = "http://192.168.136.128:5000/analyze-stock2"; // 환경 설정으로 관리할 수 있음
+
+        // HTTP 클라이언트 생성
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+
+        // 데이터를 JSON으로 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonData = objectMapper.writeValueAsString(stockData);
+
+        // HTTP 요청 생성
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(flaskApiUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonData))
+                .build();
+
+        logger.debug("Flask API 요청 전송: {}", flaskApiUrl);
+
+        // 요청 전송 및 응답 수신
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // 응답 상태 확인
+        int statusCode = response.statusCode();
+        logger.info("Flask API 응답 상태 코드: {}", statusCode);
+
+        if (statusCode != 200) {
+            logger.error("Flask API 요청 실패. 상태 코드: {}, 응답: {}", statusCode, response.body());
+            throw new RuntimeException("Python 분석 API 호출 실패. 상태 코드: " + statusCode);
+        }
+
+        // 응답 본문을 Map으로 변환
+        Map<String, Object> result = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
+
+        logger.info("Flask API를 통한 주식 데이터 분석 완료");
+        logger.debug("분석 결과: {}", result);
+
+        return result;
+    }
+
     @Override
     public long countStocksByMarketType(String marketType) {
         return stockInfoMapper.countByMarketType(marketType);
@@ -174,14 +277,4 @@ public class StockServiceImpl implements StockService {
 
         return null;
     }
-
-/*        return MarketSummary.builder()
-                .kospiIndex(3150.48)
-                .kospiChange(0.85)
-                .kosdaqIndex(928.76)
-                .kosdaqChange(-0.32)
-                .updateTime(LocalDateTime.now())
-                .build();
-    }*/
-
 }

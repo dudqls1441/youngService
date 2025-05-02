@@ -201,11 +201,14 @@
       <a class="list-group-item list-group-item-action list-group-item-light" href="/dashboard">
         <i class="fas fa-tachometer-alt me-2"></i>지하철 도착 정보
       </a>
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/stockinfo">
+      <a class="list-group-item list-group-item-action list-group-item-light active" href="/stockinfo">
         <i class="fas fa-tachometer-alt me-2"></i>주식 종목 정보
       </a>
       <a class="list-group-item list-group-item-action list-group-item-light" href="/analysis">
         <i class="fas fa-chart-pie me-2"></i>분석
+      </a>
+      <a class="list-group-item list-group-item-action list-group-item-light" href="/performance">
+        <i class="fas fa-chart-pie me-2"></i>주식 비교
       </a>
     </div>
   </div>

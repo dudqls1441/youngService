@@ -66,4 +66,8 @@ public interface StockService {
     Map<String, Object> getAllStocksWithPaging(int page, int size);
     Map<String, Object> searchStocksWithPaging(String keyword, int page, int size);
     Map<String, Object> searchStockDetailsWithPaging(Map<String, Object> map);
+    Map<String, Object> analyzeStockData(Map<String, Object> map);
+
+
+    Map<String, Object> getPerformance(Map<String, Object> map);
 }

@@ -52,9 +52,11 @@ public interface StockInfoMapper {
     List<StockInfoDTO> findByKeywordWithPaging(Map map);
 
     // 페이징된 검색 결과 조회
+    // 검색 조건에 맞는 전체 데이터 수
     List<StockInfoDTO> searchStockDetailsWithPaging(Map map);
 
-    // 검색 조건에 맞는 전체 데이터 수
+    List<StockInfoDTO> selcetPerformance(Map map);
+
     long countByKeyword(String keyword);
 
     // 상세 검색 조건으로 검색된 주식 데이터 수 조회
