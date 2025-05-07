@@ -214,6 +214,10 @@
                     <i class="fas fa-chart-pie me-2"></i>주식 비교
                 </a>
 
+                <a class="list-group-item list-group-item-action list-group-item-light" href="/managementfootball">
+                        <i class="fas fa-futbol me-2"></i>풋살 밸런싱
+                </a>
+
             </div>
         </div>
 
@@ -793,8 +797,6 @@
             analyzeBtn.disabled = false;
 
             if(data.message === "분석 성공") {
-                alert("분석이 완료되었습니다. 총 " + data.count + " 개의 데이터가 분석되었습니다.");
-
                 // 결과 표시 영역에 데이터 표시
                 displayAnalysisResult(data.result);
 

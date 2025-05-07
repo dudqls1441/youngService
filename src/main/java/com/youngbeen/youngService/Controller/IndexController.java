@@ -97,5 +97,10 @@ public class IndexController {
         return "performance";
     }
 
+    @GetMapping(value="/managementfootball")
+    public String toManagementfootball() {
+        return "managementfootball";
+    }
+
 
 }

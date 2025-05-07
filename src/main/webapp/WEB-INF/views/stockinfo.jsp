@@ -210,6 +210,9 @@
       <a class="list-group-item list-group-item-action list-group-item-light" href="/performance">
         <i class="fas fa-chart-pie me-2"></i>주식 비교
       </a>
+      <a class="list-group-item list-group-item-action list-group-item-light" href="/managementfootball">
+              <i class="fas fa-futbol me-2"></i>풋살 밸런싱
+      </a>
     </div>
   </div>
 

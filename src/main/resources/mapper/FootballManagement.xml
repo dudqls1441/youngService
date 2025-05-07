@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.youngbeen.youngService.Mapper.FootballManagementMapper">
+    <select id="findAllPlayer"  resultType="Map">
+        SELECT P.PLAYER_ID,
+            P.NAME,
+            P.POSITION,
+            PBR.RATING_ID,
+            PBR.PLAYER_ID,
+            PBR.ATTACK_SCORE,
+            PBR.DEFENSE_SCORE,
+            PBR.STAMINA_SCORE,
+            PBR.SPEED_SCORE,
+            PBR.TECHNIQUE_SCORE,
+            PBR.TEAMWORK_SCORE,
+            PBR.LAST_UPDATED
+        FROM PLAYERS P
+            INNER JOIN  PLAYERBASERATINGS PBR
+            ON P.PLAYER_ID = PBR.PLAYER_ID
+        ORDER BY P.NAME
+    </select>
+
+    <!-- 선수 정보 등록 -->
+    <insert id="insertPlayer" parameterType="Map" useGeneratedKeys="true" keyProperty="playerId" keyColumn="PLAYER_ID">
+        INSERT INTO PLAYERS (
+            PLAYER_ID,
+            NAME,
+            POSITION,
+            SECONDARY_POSITION,
+            JOIN_DATE,
+            ACTIVE_STATUS
+        ) VALUES (
+            SEQ_PLAYER_ID.NEXTVAL,
+            #{name},
+            #{position},
+            #{secondaryPosition},
+            SYSDATE,
+            'ACTIVE'
+        )
+        <selectKey keyProperty="playerId" resultType="long" order="AFTER">
+            SELECT SEQ_PLAYER_ID.CURRVAL FROM dual
+        </selectKey>
+    </insert>
+
+    <!-- 선수 평가 등록 -->
+    <insert id="insertPlayerRating" parameterType="Map">
+        INSERT INTO PLAYERBASERATINGS (
+            RATING_ID,
+            PLAYER_ID,
+            ATTACK_SCORE,
+            DEFENSE_SCORE,
+            STAMINA_SCORE,
+            SPEED_SCORE,
+            TECHNIQUE_SCORE,
+            TEAMWORK_SCORE,
+            LAST_UPDATED
+        ) VALUES (
+            SEQ_RATING_ID.NEXTVAL,
+            #{playerId},
+            #{attackScore},
+            #{defenseScore},
+            #{staminaScore},
+            #{speedScore},
+            #{techniqueScore},
+            #{teamworkScore},
+            SYSDATE
+        )
+    </insert>
+
+    <delete id="deletePlayerRating" parameterType="Map">
+        DELETE FROM PLAYERBASERATINGS
+        WHERE PLAYER_ID = #{playerId}
+    </delete>
+
+    <delete id="deletePlayer" parameterType="Map">
+        DELETE FROM PLAYERS
+        WHERE PLAYER_ID = #{playerId}
+    </delete>
+</mapper>
