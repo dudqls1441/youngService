@@ -4,24 +4,45 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.youngbeen.youngService.Mapper.FootballManagementMapper">
-    <select id="findAllPlayer"  resultType="Map">
-        SELECT P.PLAYER_ID,
-            P.NAME,
-            P.POSITION,
-            PBR.RATING_ID,
-            PBR.PLAYER_ID,
-            PBR.ATTACK_SCORE,
-            PBR.DEFENSE_SCORE,
-            PBR.STAMINA_SCORE,
-            PBR.SPEED_SCORE,
-            PBR.TECHNIQUE_SCORE,
-            PBR.TEAMWORK_SCORE,
-            PBR.LAST_UPDATED
-        FROM PLAYERS P
-            INNER JOIN  PLAYERBASERATINGS PBR
-            ON P.PLAYER_ID = PBR.PLAYER_ID
-        ORDER BY P.NAME
+    <select id="findAllPlayer" parameterType="Map" resultType="Map">
+        SELECT
+        PBR.RATING_ID,
+        P.PLAYER_ID,
+        P.NAME,
+        P.POSITION,
+        P.SECONDARY_POSITION,
+        PBR.RATING_ID,
+        COALESCE(PBR.ATTACK_SCORE, 0) AS ATTACK_SCORE,
+        COALESCE(PBR.DEFENSE_SCORE, 0) AS DEFENSE_SCORE,
+        COALESCE(PBR.STAMINA_SCORE, 0) AS STAMINA_SCORE,
+        COALESCE(PBR.SPEED_SCORE, 0) AS SPEED_SCORE,
+        COALESCE(PBR.TECHNIQUE_SCORE, 0) AS TECHNIQUE_SCORE,
+        COALESCE(PBR.TEAMWORK_SCORE, 0) AS TEAMWORK_SCORE,
+        PBR.LAST_UPDATED,
+        PBR.SCHEDULE_ID
+        FROM
+        PLAYERS P
+        LEFT JOIN
+        PLAYERBASERATINGS PBR ON P.PLAYER_ID = PBR.PLAYER_ID AND
+        <if test="isBaseRating != null and isBaseRating == true">
+            PBR.SCHEDULE_ID IS NULL
+        </if>
+        <if test="scheduleId != null">
+            PBR.SCHEDULE_ID = #{scheduleId}
+        </if>
+        ORDER BY
+        P.NAME
     </select>
+
+    <select id="getMatchSchedules"  resultType="Map">
+        SELECT SCHEDULE_ID,
+            MATCH_DATE,
+            STATUS,
+            NOTE
+        FROM MATCH_SCHEDULE
+        ORDER BY SCHEDULE_ID DESC
+    </select>
+
 
     <!-- 선수 정보 등록 -->
     <insert id="insertPlayer" parameterType="Map" useGeneratedKeys="true" keyProperty="playerId" keyColumn="PLAYER_ID">
@@ -37,7 +58,7 @@
             #{name},
             #{position},
             #{secondaryPosition},
-            SYSDATE,
+            null,
             'ACTIVE'
         )
         <selectKey keyProperty="playerId" resultType="long" order="AFTER">
@@ -56,7 +77,9 @@
             SPEED_SCORE,
             TECHNIQUE_SCORE,
             TEAMWORK_SCORE,
-            LAST_UPDATED
+            LAST_UPDATED,
+            SCHEDULE_ID,
+            PARTICIPATION_YN
         ) VALUES (
             SEQ_RATING_ID.NEXTVAL,
             #{playerId},
@@ -66,9 +89,27 @@
             #{speedScore},
             #{techniqueScore},
             #{teamworkScore},
-            SYSDATE
+            TO_DATE(REGEXP_REPLACE(#{matchDate}, '[(][^)]*[)]', ''), 'YYYY. MM. DD.'),
+            #{scheduleId},
+            #{participationYn}
         )
     </insert>
+
+    <!-- 선수 평가 업데이트 -->
+    <update id="updatePlayerRating" parameterType="Map">
+        UPDATE PLAYERBASERATINGS
+        SET
+        ATTACK_SCORE = #{attackScore},
+        DEFENSE_SCORE = #{defenseScore},
+        STAMINA_SCORE = #{staminaScore},
+        SPEED_SCORE = #{speedScore},
+        TECHNIQUE_SCORE = #{techniqueScore},
+        TEAMWORK_SCORE = #{teamworkScore},
+        PARTICIPATION_YN = #{participationYn},
+        LAST_UPDATED = TO_DATE(REGEXP_REPLACE(#{matchDate}, '[(][^)]*[)]', ''), 'YYYY. MM. DD.')
+        WHERE
+        RATING_ID = #{ratingId}
+    </update>
 
     <delete id="deletePlayerRating" parameterType="Map">
         DELETE FROM PLAYERBASERATINGS
@@ -79,4 +120,131 @@
         DELETE FROM PLAYERS
         WHERE PLAYER_ID = #{playerId}
     </delete>
+
+    <select id="getPlayerAverageRatings" resultType="Map">
+        WITH
+        -- 기본 평가 점수(LAST_UPDATED와 SCHEDULE_ID가 NULL인 데이터)
+        BASE_RATINGS AS (
+            SELECT
+                PLAYER_ID,
+                ATTACK_SCORE AS BASE_ATTACK,
+                DEFENSE_SCORE AS BASE_DEFENSE,
+                STAMINA_SCORE AS BASE_STAMINA,
+                SPEED_SCORE AS BASE_SPEED,
+                TECHNIQUE_SCORE AS BASE_TECHNIQUE,
+                TEAMWORK_SCORE AS BASE_TEAMWORK
+            FROM
+                PLAYERBASERATINGS
+            WHERE
+                LAST_UPDATED IS NULL
+            AND SCHEDULE_ID IS NULL
+        ),
+
+        -- 최근 한 달간의 평가 점수 중 참여한 데이터(PARTICIPATION_YN = 'Y')의 평균
+        RECENT_RATINGS AS (
+            SELECT
+                PLAYER_ID,
+                AVG(ATTACK_SCORE) AS AVG_ATTACK,
+                AVG(DEFENSE_SCORE) AS AVG_DEFENSE,
+                AVG(STAMINA_SCORE) AS AVG_STAMINA,
+                AVG(SPEED_SCORE) AS AVG_SPEED,
+                AVG(TECHNIQUE_SCORE) AS AVG_TECHNIQUE,
+                AVG(TEAMWORK_SCORE) AS AVG_TEAMWORK,
+                COUNT(*) AS PARTICIPATION_COUNT
+            FROM
+                PLAYERBASERATINGS
+            WHERE
+                LAST_UPDATED >= ADD_MONTHS(SYSDATE, -1)
+            AND PARTICIPATION_YN = 'Y'
+            AND SCHEDULE_ID IS NOT NULL
+            GROUP BY
+                PLAYER_ID
+            HAVING
+                COUNT(*) > 0
+        )
+
+        -- 최종 결과: 기본 평가(가중치 5)와 최근 평가 평균(가중치 5)을 합산
+        SELECT
+            P.PLAYER_ID,
+            P.NAME,
+            P.POSITION,
+            P.SECONDARY_POSITION,
+        -- 기본 평가가 없으면 최근 평가만, 최근 평가가 없으면 기본 평가만 사용
+        -- 둘 다 있으면 가중 평균 계산 (기본 평가 가중치 5, 최근 평가 가중치 5)
+            ROUND(
+            NVL((BR.BASE_ATTACK * 5 + NVL(RR.AVG_ATTACK, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_ATTACK, 0))
+            , 1) AS AVG_ATTACK,
+
+            ROUND(
+            NVL((BR.BASE_DEFENSE * 5 + NVL(RR.AVG_DEFENSE, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_DEFENSE, 0))
+            , 1) AS AVG_DEFENSE,
+
+            ROUND(
+            NVL((BR.BASE_STAMINA * 5 + NVL(RR.AVG_STAMINA, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_STAMINA, 0))
+            , 1) AS AVG_STAMINA,
+
+            ROUND(
+            NVL((BR.BASE_SPEED * 5 + NVL(RR.AVG_SPEED, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_SPEED, 0))
+            , 1) AS AVG_SPEED,
+
+            ROUND(
+            NVL((BR.BASE_TECHNIQUE * 5 + NVL(RR.AVG_TECHNIQUE, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_TECHNIQUE, 0))
+            , 1) AS AVG_TECHNIQUE,
+
+            ROUND(
+            NVL((BR.BASE_TEAMWORK * 5 + NVL(RR.AVG_TEAMWORK, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_TEAMWORK, 0))
+            , 1) AS AVG_TEAMWORK,
+
+            -- 종합 평균 점수 (모든 영역의 평균)
+            ROUND(
+            (
+            NVL((BR.BASE_ATTACK * 5 + NVL(RR.AVG_ATTACK, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_ATTACK, 0)) +
+
+            NVL((BR.BASE_DEFENSE * 5 + NVL(RR.AVG_DEFENSE, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_DEFENSE, 0)) +
+
+            NVL((BR.BASE_STAMINA * 5 + NVL(RR.AVG_STAMINA, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_STAMINA, 0)) +
+
+            NVL((BR.BASE_SPEED * 5 + NVL(RR.AVG_SPEED, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_SPEED, 0)) +
+
+            NVL((BR.BASE_TECHNIQUE * 5 + NVL(RR.AVG_TECHNIQUE, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_TECHNIQUE, 0)) +
+
+            NVL((BR.BASE_TEAMWORK * 5 + NVL(RR.AVG_TEAMWORK, 0) * 5) /
+            CASE WHEN RR.PLAYER_ID IS NOT NULL THEN 10 ELSE 5 END,
+            NVL(RR.AVG_TEAMWORK, 0))
+          ) / 6
+            , 1) AS TOTAL_AVERAGE,
+
+        -- 참여 횟수
+            NVL(RR.PARTICIPATION_COUNT, 0) AS PARTICIPATION_COUNT
+        FROM
+            PLAYERS P
+        LEFT JOIN
+            BASE_RATINGS BR ON P.PLAYER_ID = BR.PLAYER_ID
+        LEFT JOIN
+            RECENT_RATINGS RR ON P.PLAYER_ID = RR.PLAYER_ID
+        ORDER BY
+            TOTAL_AVERAGE DESC, P.NAME
+    </select>
 </mapper>

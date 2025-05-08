@@ -26,24 +26,67 @@ public class FootballManagementController {
     private static final Logger logger = LoggerFactory.getLogger(FootballManagementController.class);
 
 
+    @GetMapping("/matchSchedules")
+    @ResponseBody
+    public Map<String, Object> getMatchSchedules() {
+        logger.debug("/football/matchSchedules 요청");
+
+        List<Map> schedules = fmService.getMatchSchedules();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", schedules);
+
+        return response;
+    }
+
     /**
      * 종목 검색 결과를 처리하는 메소드
      */
     @GetMapping("/getPlayers")
     @ResponseBody
-    public Map<String, Object> getPlayerList(@RequestParam(value = "Date", required = false) String date,
-                                             HttpSession session,
-                                             Model model) {
-        logger.debug("/football/getPlayers 요청 -" + date);
+    public Map<String, Object> getPlayerList(
+            @RequestParam(value = "scheduleId", required = false) Long scheduleId,
+            @RequestParam(value = "type", required = false) String type) {
+
+        logger.debug("/football/getPlayers 요청 - scheduleId: {}, type: {}", scheduleId, type);
 
         Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("Date", date);
+
+        // 기본 평가 또는 경기별 평가 구분
+        if ("base".equals(type)) {
+            requestMap.put("isBaseRating", true);
+        } else if (scheduleId != null) {
+            requestMap.put("scheduleId", scheduleId);
+        }
+
+        logger.debug("isBaseRating:::{}",requestMap.get("isBaseRating"));
+        logger.debug("scheduleId:::{}",requestMap.get("scheduleId"));
 
         // 서비스에서 List<Map>을 직접 받아옴
         List<Map> resultArray = fmService.getPlayers(requestMap);
 
-        logger.debug("resultArray  :::{}", resultArray);
+        logger.debug("resultArray:::{}",resultArray);
 
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", resultArray);
+
+        return response;
+    }
+
+    @GetMapping("/getPlayerAverageRatings")
+    @ResponseBody
+    public Map<String, Object> getPlayerAverageRatings() {
+
+        logger.debug("/football/getPlayerAverageRatings 요청");
+
+        Map<String, Object> requestMap = new HashMap<>();
+
+        // 서비스에서 List<Map>을 직접 받아옴
+        List<Map<String, Object>> resultArray = fmService.getPlayerAverageRatings();
+
+        logger.debug("resultArray:::{}",resultArray);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -89,6 +132,51 @@ public class FootballManagementController {
     }
 
 
+    /**
+     * 모든 선수 평가 저장 API
+     */
+    @PostMapping("/saveAllRatings")
+    @ResponseBody
+    public Map<String, Object> saveAllPlayerRatings(@RequestBody Map<String, Object> requestData) {
+        logger.debug("/football/saveAllRatings 요청 - requestData: {}", requestData);
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 일정 정보 추출
+            Map<String, Object> scheduleInfo = (Map<String, Object>) requestData.get("scheduleInfo");
+
+            // 선수 평가 데이터 추출
+            List<Map<String, Object>> playerRatings = (List<Map<String, Object>>) requestData.get("playerRatings");
+
+            // 각 선수별로 참여 여부 설정
+            for (Map<String, Object> rating : playerRatings) {
+                // 기본값은 "N"으로 설정
+                rating.put("PARTICIPATION_YN", "N");
+
+                // 하나라도 점수가 0보다 크면 "Y"로 설정
+                if (isAnyScoreGreaterThanZero(rating)) {
+                    rating.put("PARTICIPATION_YN", "Y");
+                }
+            }
+
+            // 서비스 레이어에 전달
+            int savedCount = fmService.saveAllPlayerRatings(scheduleInfo, playerRatings);
+
+            response.put("success", true);
+            response.put("message", savedCount + "명의 선수 평가가 저장되었습니다.");
+            response.put("savedCount", savedCount);
+
+        } catch (Exception e) {
+            logger.error("선수 평가 저장 중 오류 발생: {}", e.getMessage(), e);
+
+            response.put("success", false);
+            response.put("message", "선수 평가 저장 중 오류가 발생했습니다: " + e.getMessage());
+        }
+
+        return response;
+    }
+
     @PostMapping("/teamBalancing")
     @ResponseBody
     public Map<String, Object> balanceTeams(@RequestBody Map<String, Object> requestData) {
@@ -99,9 +187,26 @@ public class FootballManagementController {
         String algorithm = (String) requestData.get("algorithm");
 
         List<Map<String, Object>> teams;
+        Map<String, Object> serviceResult = new HashMap<>();
 
         // 알고리즘에 따라 팀 구성
-        if ("advanced".equals(algorithm)) {
+        if ("ml_based".equals(algorithm) || "deep_learning".equals(algorithm)) {
+            // ML/DL 기반 알고리즘은 서비스 호출
+            Map<String, Object> serviceRequest = new HashMap<>();
+            serviceRequest.put("players", players);
+            serviceRequest.put("teamCount", teamCount);
+            serviceRequest.put("algorithm", algorithm);
+
+            serviceResult = fmService.balanceTeamsWithML(serviceRequest);
+
+            if (serviceResult.containsKey("teams") && serviceResult.get("teams") instanceof List) {
+                teams = (List<Map<String, Object>>) serviceResult.get("teams");
+            } else {
+                // 오류 발생 시 기본 알고리즘으로 처리
+                logger.warn("ML/DL 기반 팀 밸런싱 실패, 기본 알고리즘으로 대체");
+                teams = createBalancedTeamsSnake(players, teamCount);
+            }
+        } else if ("advanced".equals(algorithm)) {
             teams = createBalancedTeamsAdvanced(players, teamCount);
         } else {
             teams = createBalancedTeamsSnake(players, teamCount);
@@ -126,6 +231,15 @@ public class FootballManagementController {
         response.put("success", true);
         response.put("teams", teams);
         response.put("balanceScore", balanceScore);
+
+        // 시각화 URL 추가 (ML/DL 결과에 포함되어 있다면)
+        if ("ml_based".equals(algorithm) || "deep_learning".equals(algorithm)) {
+            if (serviceResult.containsKey("visualization_url")) {
+                response.put("visualizationUrl", serviceResult.get("visualization_url"));
+                logger.debug("visualizatuinUrl ::: {}", serviceResult.get("visualization_url"));
+            }
+        }
+
 
         return response;
     }
@@ -315,5 +429,50 @@ public class FootballManagementController {
                 .orElse(0.0);
 
         return balanceScore;
+    }
+
+    /**
+     * 평가 점수 중 하나라도 0보다 큰지 확인하는 메서드
+     */
+    private boolean isAnyScoreGreaterThanZero(Map<String, Object> rating) {
+        // 확인할 점수 필드 목록
+        String[] scoreFields = {
+                "ATTACK_SCORE", "DEFENSE_SCORE", "STAMINA_SCORE",
+                "SPEED_SCORE", "TECHNIQUE_SCORE", "TEAMWORK_SCORE"
+        };
+
+        // 각 필드를 확인하여 0보다 큰 값이 있으면 true 반환
+        for (String field : scoreFields) {
+            Object scoreObj = rating.get(field);
+            if (scoreObj != null) {
+                // Integer로 변환을 시도
+                int score;
+                if (scoreObj instanceof Integer) {
+                    score = (Integer) scoreObj;
+                } else if (scoreObj instanceof String) {
+                    try {
+                        score = Integer.parseInt((String) scoreObj);
+                    } catch (NumberFormatException e) {
+                        // 숫자로 변환할 수 없는 경우 다음 필드로 넘어감
+                        continue;
+                    }
+                } else if (scoreObj instanceof Double || scoreObj instanceof Float) {
+                    // 소수점이 있는 숫자인 경우
+                    double doubleScore = ((Number) scoreObj).doubleValue();
+                    score = (int) doubleScore;
+                } else {
+                    // 처리할 수 없는 타입인 경우 다음 필드로 넘어감
+                    continue;
+                }
+
+                // 0보다 큰 점수가 있으면 참여한 것으로 간주
+                if (score > 0) {
+                    return true;
+                }
+            }
+        }
+
+        // 모든 점수가 0 이하이거나 null인 경우
+        return false;
     }
 }

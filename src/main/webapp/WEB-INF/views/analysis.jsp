@@ -349,7 +349,7 @@
                 <div class="card mb-5"> <!-- margin-bottom을 4에서 5로 증가 -->
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <span>상세 검색 결과</span>
-                        <span class="badge bg-light text-dark">${fn:length(allDetailSearchResults)}건</span>
+                        <span class="badge bg-light text-dark" id="detailCnt" >${fn:length(allDetailSearchResults)}건</span>
                     </div>
                     <div class="card-body p-0">
                         <!-- AG Grid 컨테이너 -->
@@ -830,6 +830,11 @@
             console.error('JSON 파싱 오류:', error);
             return;
         }
+
+        console.log("stockDataList::",stockDataList);
+        console.log("stockDataList Len::",stockDataList.length);
+
+        document.getElementById('detailCnt').textContent = stockDataList.length + '건';
 
         // 컬럼 정의
         const columnDefs = [

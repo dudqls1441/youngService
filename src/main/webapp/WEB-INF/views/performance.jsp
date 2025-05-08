@@ -437,6 +437,8 @@
         return;
     }
 
+    console.log("그리드 Length ::"+ gridData.length);
+
     // 건수 업데이트
     document.getElementById('performanceCount').textContent = gridData.length;
 

@@ -363,15 +363,25 @@
               <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-user-tag me-2"></i>선수 평가</span>
                 <button class="btn btn-sm btn-light" id="btnAddPlayerRating">
-                  <i class="fas fa-plus me-1"></i>새 평가
+                  <i class="fas fa-plus me-1"></i>선수 추가
                 </button>
               </div>
               <div class="card-body">
                 <!-- 날짜 선택기 -->
                 <div class="row mb-4">
                   <div class="col-md-4">
-                    <label for="ratingDate" class="form-label">평가일 선택</label>
-                    <input type="date" id="ratingDate" class="form-control" value="${today}">
+                    <label for="matchSchedule" class="form-label">평가 일정</label>
+                    <select id="matchSchedule" class="form-select">
+                      <option value="base">기본 평가</option>
+                      <!-- 서버에서 가져온 경기 일정 데이터 -->
+                      <c:forEach var="schedule" items="${matchSchedules}">
+                        <option value="${schedule.scheduleId}"
+                                ${schedule.scheduleId eq selectedScheduleId ? 'selected' : ''}>
+                          ${schedule.matchDate} (${schedule.status eq 'COMPLETED' ? '완료' :
+                                              schedule.status eq 'SCHEDULED' ? '예정' : '취소'})
+                        </option>
+                      </c:forEach>
+                    </select>
                   </div>
                   <div class="col-md-8 d-flex align-items-end">
                     <button id="btnLoadRatings" class="btn btn-primary">
@@ -389,7 +399,7 @@
                     <thead class="table-light">
                       <tr>
                         <th style="width: 5%">선택</th>
-                        <th style="width: 5%">ID</th>
+                        <th style="width: 5%" hidden=true>ID</th>
                         <th style="width: 10%">이름</th>
                         <th style="width: 5%">포지션</th>
                         <th style="width: 10%">공격력</th>
@@ -441,6 +451,8 @@
                     <select id="balancingAlgorithm" class="form-select">
                       <option value="snake">스네이크 드래프트 (종합 점수 기준)</option>
                       <option value="advanced" selected>포지션 밸런싱 (포지션별 분배)</option>
+                      <option value="ml_based">ML 클러스터링 밸런싱</option>
+                      <option value="deep_learning">DL 최적화 밸런싱</option>
                     </select>
                   </div>
                   <div class="col-md-4 d-flex align-items-end">
@@ -547,6 +559,7 @@
       <div class="modal-body">
         <form id="playerRatingForm">
           <input type="hidden" id="playerId" name="playerId">
+          <input type="hidden" id="ratingId" name="ratingId">
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="playerName" class="form-label">선수명</label>
@@ -619,7 +632,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 오늘 날짜 설정
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('ratingDate').value = today;
 
     // 사이드바 토글 이벤트
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -632,8 +644,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 경기 일정 로드
+    loadMatchSchedules();
+
     // 선수 데이터 로드
     loadPlayerRatings();
+
 
     // 버튼 이벤트 리스너 등록
     document.getElementById('btnLoadRatings').addEventListener('click', loadPlayerRatings);
@@ -647,21 +663,88 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnDeselectAll').addEventListener('click', deselectAllPlayers);
 });
 
-// 선수 평가 데이터 로드
+// 페이지 로드 시 경기 일정 데이터 가져오기
+function loadMatchSchedules() {
+    fetch('/football/matchSchedules')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+
+                console.log("data ::", data);
+                const matchScheduleSelect = document.getElementById('matchSchedule');
+
+                // 기존 옵션 제거 (기본 평가 옵션 유지)
+                while (matchScheduleSelect.options.length > 1) {
+                    matchScheduleSelect.remove(1);
+                }
+
+                // 경기 일정 옵션 추가
+                data.data.forEach(schedule => {
+                    const option = document.createElement('option');
+                    option.value = schedule.SCHEDULE_ID;
+
+                    const date = new Date(schedule.MATCH_DATE);
+                    const dateStr = date.toLocaleDateString();
+
+                    let status = '';
+                    if (schedule.STATUS === 'COMPLETED') status = '완료';
+                    else if (schedule.STATUS === 'SCHEDULED') status = '예정';
+                    else status = '취소';
+
+                    option.textContent = dateStr + ' (' + status + ')';
+                    matchScheduleSelect.appendChild(option);
+                });
+
+                // 가장 최근 완료된 경기 또는 첫 번째 항목 선택
+                const completedOptions = Array.from(matchScheduleSelect.options)
+                    .filter(opt => opt.text.includes('완료'));
+
+                if (completedOptions.length > 0) {
+                    completedOptions[0].selected = true;
+                }
+
+                // 선수 데이터 로드
+                loadPlayerRatings();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading match schedules:', error);
+        });
+}
+
+
 function loadPlayerRatings() {
-    const ratingDate = document.getElementById('ratingDate').value;
+    const scheduleId = document.getElementById('matchSchedule').value;
+
+    console.log("loadPlayerRatings scheduleId ::", scheduleId);
 
     // 로딩 상태 표시
     const tableBody = document.querySelector('#playerRatingsTable tbody');
     tableBody.innerHTML = '<tr><td colspan="12" class="text-center">데이터를 불러오는 중...</td></tr>';
 
-    fetch(`/football/getPlayers?date=\${ratingDate}`)
+    // 기본 평가인지 경기별 평가인지 구분
+    const isBaseRating = scheduleId === 'base';
+    const apiUrl = isBaseRating
+        ? '/football/getPlayers?type=base'
+        : '/football/getPlayers?scheduleId=' + scheduleId;
+
+    // API 호출
+    fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
             if (data.success && Array.isArray(data.data)) {
                 displayPlayerRatings(data.data);
 
-                loadPlayerSelectionList(data.data);
+                loadPlayerSelectionList();
+                //loadPlayerSelectionList_old(data.data);
+
+                // 제목 업데이트
+                const ratingTitle = document.getElementById('ratingTitle');
+                if (ratingTitle) {
+                    ratingTitle.textContent = isBaseRating
+                        ? '기본 평가'
+                        : document.getElementById('matchSchedule').options[document.getElementById('matchSchedule').selectedIndex].text;
+                }
             } else {
                 console.error('Invalid data format:', data);
                 tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">데이터 형식이 올바르지 않습니다.</td></tr>';
@@ -671,7 +754,6 @@ function loadPlayerRatings() {
             console.error('Error:', error);
             tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">데이터 로드 중 오류가 발생했습니다.</td></tr>';
         });
-
 }
 
 // 선수 평가 데이터 화면에 표시
@@ -701,7 +783,6 @@ function displayPlayerRatings(players) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><input type="checkbox" class="form-check-input player-select-checkbox" data-player-id="\${player.id}"></td>
-            <td>\${player.PLAYER_ID}</td>
             <td>\${player.NAME}</td>
             <td><span class="badge \${positionBadgeClass}">\${player.POSITION}</span></td>
             <td><input type="number" class="form-control rating-input" data-field="attackScore" value="\${player.ATTACK_SCORE}" min="1" max="10" step="0.5"></td>
@@ -730,8 +811,8 @@ function displayPlayerRatings(players) {
     document.querySelectorAll('.btn-edit-player').forEach(btn => {
         btn.addEventListener('click', function() {
             const playerId = this.getAttribute('data-player-id');
-            const playerRow = document.querySelector(`tr[data-player-id="${playerId}"]`);
-            const playerData = JSON.parse(playerRow.closest('tr').dataset.player);
+            const playerRow = this.closest('tr');
+            const playerData = JSON.parse(playerRow.dataset.player || '{}');
             showEditPlayerModal(playerData);
         });
     });
@@ -780,8 +861,67 @@ function displayPlayerRatings(players) {
     });
 }
 
-// 선수 선택 목록 로드
-function loadPlayerSelectionList(players) {
+// 선수 기본 평가 + 선수 한달갈 평균 평가를 조회하여 뿌려줌
+function loadPlayerSelectionList() {
+    const apiUrl = '/football/getPlayerAverageRatings'
+    // API 호출
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+                const selectionList = document.getElementById('playerSelectionList');
+                selectionList.innerHTML = '';
+
+                // data가 아닌 data.data를 사용해야 함
+                data.data.forEach(player => {
+                    // 평균 점수는 이미 TOTAL_AVERAGE 필드에 계산되어 있음
+                    const avgScore = player.TOTAL_AVERAGE || ((player.AVG_ATTACK + player.AVG_DEFENSE + player.AVG_STAMINA +
+                                      player.AVG_SPEED + player.AVG_TECHNIQUE + player.AVG_TEAMWORK) / 6).toFixed(1);
+
+                    const positionBadgeClass = getPositionBadgeClass(player.POSITION);
+
+                    const playerCard = document.createElement('div');
+                    playerCard.className = 'col-md-3 col-sm-4 col-6 mb-3';
+                    playerCard.innerHTML = `
+                        <div class="card player-card h-100">
+                            <div class="card-body text-center">
+                                <div class="form-check form-switch d-flex justify-content-end mb-2">
+                                    <input class="form-check-input player-select" type="checkbox"
+                                           data-player-id="\${player.PLAYER_ID}" id="playerCheck\${player.PLAYER_ID}">
+                                </div>
+                                <h6 class="card-title mb-2 text-truncate" title="\${player.NAME}" style="max-width: 100%; font-size: 0.95rem;">\${player.NAME}</h6>
+                                <span class="badge \${positionBadgeClass} mb-3">\${player.POSITION}</span>
+                                <div class="small text-muted">평균 점수: <strong>\${avgScore}</strong></div>
+                            </div>
+                        </div>
+                    `;
+                    selectionList.appendChild(playerCard);
+
+                    // 선수 카드에 데이터 설정
+                    playerCard.dataset.player = JSON.stringify(player);
+                });
+
+                // 선수 선택 이벤트 리스너 등록
+                document.querySelectorAll('.player-select').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateSelectedPlayerCount);
+                });
+
+            } else {
+                console.error('Invalid data format:', data);
+                // tableBody가 정의되지 않음 - selectionList로 변경하거나 에러 처리 방식 수정
+                selectionList.innerHTML = '<div class="alert alert-danger">데이터 형식이 올바르지 않습니다.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // tableBody가 정의되지 않음 - selectionList로 변경
+            const selectionList = document.getElementById('playerSelectionList');
+            selectionList.innerHTML = '<div class="alert alert-danger">데이터 로드 중 오류가 발생했습니다.</div>';
+        });
+}
+
+// 선수 선택 목록 로드(OLD,미사용) 선수 평가 탭에서 조회를 하면 자동으로 호출되는 함수( 선수평가 탭에 평가 일자로 조회되는 데이터를 뿌려줌)
+function loadPlayerSelectionList_old(players) {
     const selectionList = document.getElementById('playerSelectionList');
     selectionList.innerHTML = '';
 
@@ -854,17 +994,20 @@ function showAddPlayerModal() {
 
 // 선수 편집 모달 표시
 function showEditPlayerModal(player) {
+
+    console.log("showEditPlayerModal  player ::", player);
     // 모달에 선수 데이터 채우기
-    document.getElementById('playerId').value = player.id;
-    document.getElementById('playerName').value = player.name;
-    document.getElementById('position').value = player.position;
+    document.getElementById('playerId').value = player.PLAYER_ID;
+    document.getElementById('ratingId').value = player.RATING_ID;
+    document.getElementById('playerName').value = player.NAME;
+    document.getElementById('position').value = player.POSITION;
     document.getElementById('secondaryPosition').value = player.secondaryPosition || '';
-    document.getElementById('attackScore').value = player.attackScore;
-    document.getElementById('defenseScore').value = player.defenseScore;
-    document.getElementById('staminaScore').value = player.staminaScore;
-    document.getElementById('speedScore').value = player.speedScore;
-    document.getElementById('techniqueScore').value = player.techniqueScore;
-    document.getElementById('teamworkScore').value = player.teamworkScore;
+    document.getElementById('attackScore').value = player.ATTACK_SCORE;
+    document.getElementById('defenseScore').value = player.DEFENSE_SCORE;
+    document.getElementById('staminaScore').value = player.STAMINA_SCORE;
+    document.getElementById('speedScore').value = player.SPEED_SCORE;
+    document.getElementById('techniqueScore').value = player.TECHNIQUE_SCORE;
+    document.getElementById('teamworkScore').value = player.TEAMWORK_SCORE;
 
     document.getElementById('playerRatingModalLabel').textContent = '선수 평가 수정';
 
@@ -885,8 +1028,10 @@ function savePlayerRating() {
 
     // 폼 데이터 수집
     const playerId = document.getElementById('playerId').value;
+    const ratingId = document.getElementById('ratingId').value;
     const playerData = {
         id: playerId ? parseInt(playerId) : null,
+        ratingId: ratingId ? parseInt(ratingId) : null,
         name: document.getElementById('playerName').value,
         position: document.getElementById('position').value,
         secondaryPosition: document.getElementById('secondaryPosition').value,
@@ -922,31 +1067,48 @@ function saveAllRatings() {
     const rows = document.querySelectorAll('#playerRatingsTable tbody tr');
     const playerRatings = [];
 
+    const scheduleId = document.getElementById('matchSchedule').value;
+    const scheduleText = document.getElementById('matchSchedule').options[document.getElementById('matchSchedule').selectedIndex].text;
+
+
     rows.forEach(row => {
         if (row.dataset.player) {
-            playerRatings.push(JSON.parse(row.dataset.player));
+            const playerData = JSON.parse(row.dataset.player);
+
+            // 스케줄 ID 추가 (base 평가인 경우 null로 설정)
+            if (scheduleId === 'base') {
+                playerData.SCHEDULE_ID = null;
+            } else {
+                playerData.SCHEDULE_ID = parseInt(scheduleId);
+            }
+
+            playerRatings.push(playerData);
         }
     });
 
-    // API 호출 (여기서는 가상 처리)
-    // fetch('/api/player-ratings/batch', {
-    //     method: 'PUT',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(playerRatings)
-    // })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         alert('모든 선수 평가가 저장되었습니다.');
-    //     })
-    //     .catch(error => {
-    //         console.error('Error:', error);
-    //         alert('선수 데이터 저장 중 오류가 발생했습니다.');
-    //     });
+    // 전송할 데이터 객체 생성
+    const saveData = {
+        scheduleInfo: {
+            scheduleId: scheduleId === 'base' ? null : parseInt(scheduleId),
+            scheduleText: scheduleText
+        },
+        playerRatings: playerRatings
+    };
 
-    // 가상 처리
-    setTimeout(() => {
-        alert('모든 선수 평가가 저장되었습니다.');
-    }, 500);
+    // API 호출 (여기서는 가상 처리)
+    fetch('/football/saveAllRatings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveData)
+    })
+        .then(response => response.json())
+        .then(data => {
+            alert('모든 선수 평가가 저장되었습니다.');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('선수 데이터 저장 중 오류가 발생했습니다.');
+        });
 }
 
 // 선수 삭제
@@ -1124,95 +1286,6 @@ function getPositionBadgeClass(position) {
     }
 }
 
-// ----- 팀 밸런싱 알고리즘 -----
-
-// 스네이크 드래프트 방식 팀 배정 메서드
-function createBalancedTeamsSnake(players, teamCount) {
-    // 팀 객체 생성
-    const teams = [];
-    for (let i = 0; i < teamCount; i++) {
-        teams.push({
-            name: `Team \${String.fromCharCode(65 + i)}`,
-            players: []
-        });
-    }
-
-    // 종합 점수 기준 정렬
-    players.sort((a, b) => calculateTotalScore(b) - calculateTotalScore(a));
-
-    // 스네이크 드래프트 방식으로 선수 배정
-    let reverse = false;
-    for (let i = 0; i < players.length; i++) {
-        let teamIndex = i % teamCount;
-        if (reverse) {
-            teamIndex = teamCount - 1 - teamIndex;
-        }
-
-        teams[teamIndex].players.push(players[i]);
-
-        // 한 라운드가 끝나면 방향 전환
-        if ((i + 1) % teamCount === 0) {
-            reverse = !reverse;
-        }
-    }
-
-    return teams;
-}
-
-// 강화된 팀 밸런싱 알고리즘 (포지션 고려)
-function createBalancedTeamsAdvanced(players, teamCount) {
-    // 팀 객체 생성
-    const teams = [];
-    for (let i = 0; i < teamCount; i++) {
-        teams.push({
-            name: `Team \${String.fromCharCode(65 + i)}`,
-            players: []
-        });
-    }
-
-    // 포지션별로 선수 그룹화
-    const positionGroups = {
-        'FW': [],
-        'MF': [],
-        'DF': [],
-        'GK': []
-    };
-
-    players.forEach(player => {
-        if (positionGroups[player.position]) {
-            positionGroups[player.position].push(player);
-        } else {
-            positionGroups['MF'].push(player); // 기본값
-        }
-    });
-
-    // 각 포지션 그룹 내에서 점수 기준 정렬
-    for (const position in positionGroups) {
-        positionGroups[position].sort((a, b) => calculateTotalScore(b) - calculateTotalScore(a));
-    }
-
-    // 포지션별로 선수 배정 (각 포지션마다 스네이크 드래프트 적용)
-    for (const position of ['GK', 'DF', 'MF', 'FW']) {
-        const positionPlayers = positionGroups[position];
-        let reverse = false;
-
-        for (let i = 0; i < positionPlayers.length; i++) {
-            let teamIndex = i % teamCount;
-            if (reverse) {
-                teamIndex = teamCount - 1 - teamIndex;
-            }
-
-            teams[teamIndex].players.push(positionPlayers[i]);
-
-            // 한 라운드가 끝나면 방향 전환
-            if ((i + 1) % teamCount === 0) {
-                reverse = !reverse;
-            }
-        }
-    }
-
-    return teams;
-}
 </script>
 </body>
 </html>

@@ -1,5 +1,8 @@
 package com.youngbeen.youngService.Service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.youngbeen.youngService.DTO.StockInfoDTO;
 import com.youngbeen.youngService.Mapper.FootballManagementMapper;
 import com.youngbeen.youngService.Service.FootballManagementService;
 import jakarta.transaction.Transactional;
@@ -7,6 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +33,23 @@ public class FootballManagementServiceImpl implements FootballManagementService 
 
     @Override
     public List<Map> getPlayers(Map map) {
-        logger.info("선수 정보 조회 getPlayers map {} :",map.get("Date"));
+        logger.info("선수 정보 조회 getPlayers map {} :",map);
 
         List<Map> result = fmMapper.findAllPlayer(map);
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getPlayerAverageRatings() {
+        logger.info("선수 평균치 조회 getPlayerAverageRatings");
+
+        List<Map<String, Object>> result = fmMapper.getPlayerAverageRatings();
+        return result;
+    }
+
+    @Override
+    public List<Map> getMatchSchedules() {
+        List<Map> result = fmMapper.getMatchSchedules();
         return result;
     }
 
@@ -53,6 +76,11 @@ public class FootballManagementServiceImpl implements FootballManagementService 
                 ratingInfo.put("speedScore", playerInfo.get("speedScore"));
                 ratingInfo.put("techniqueScore", playerInfo.get("techniqueScore"));
                 ratingInfo.put("teamworkScore", playerInfo.get("teamworkScore"));
+
+                //신규 선수 등록은 LAST_UPDATE- null, schedule_id - null ,participationYn - N
+                ratingInfo.put("matchDate", "");
+                ratingInfo.put("scheduleId", "");
+                ratingInfo.put("participationYn", "N");
 
                 int ratingInserted = fmMapper.insertPlayerRating(ratingInfo);
 
@@ -94,5 +122,322 @@ public class FootballManagementServiceImpl implements FootballManagementService 
         if (playerDeleted == 0) {
             throw new RuntimeException("삭제할 선수 정보가 존재하지 않습니다: " + playerId);
         }
+    }
+
+    @Override
+    @Transactional
+    public int saveAllPlayerRatings(Map<String, Object> scheduleInfo, List<Map<String, Object>> playerRatings) {
+        logger.info("선수 평가 일괄 저장 - scheduleInfo: {}, 선수 수: {}", scheduleInfo, playerRatings.size());
+
+        // 일정 ID 추출 (null이면 기본 평가)
+        Object scheduleIdObj = scheduleInfo.get("scheduleId");
+        Long scheduleId = null;
+        String matchDate = "";
+        if (scheduleIdObj != null) {
+            matchDate = (String) scheduleInfo.get("scheduleText");
+            if (scheduleIdObj instanceof Integer) {
+                scheduleId = ((Integer) scheduleIdObj).longValue();
+            } else if (scheduleIdObj instanceof Long) {
+                scheduleId = (Long) scheduleIdObj;
+            }
+        }
+
+        int savedCount = 0;
+
+        // 각 선수 평가 처리
+        for (Map<String, Object> playerRating : playerRatings) {
+            // 필요한 파라미터 추출
+            Long playerId = null;
+            if (playerRating.get("PLAYER_ID") instanceof Integer) {
+                playerId = ((Integer) playerRating.get("PLAYER_ID")).longValue();
+            } else if (playerRating.get("PLAYER_ID") instanceof Long) {
+                playerId = (Long) playerRating.get("PLAYER_ID");
+            }
+
+            Long ratingId = null;
+            if (playerRating.get("RATING_ID") != null) {
+                if (playerRating.get("RATING_ID") instanceof Integer) {
+                    ratingId = ((Integer) playerRating.get("RATING_ID")).longValue();
+                } else if (playerRating.get("RATING_ID") instanceof Long) {
+                    ratingId = (Long) playerRating.get("RATING_ID");
+                }
+            }
+
+            // 필수 값 확인
+            if (playerId == null) {
+                logger.warn("선수 ID가 누락되었습니다: {}", playerRating);
+                continue;
+            }
+
+            // 평가 데이터 맵 생성
+            Map<String, Object> ratingData = new HashMap<>();
+            ratingData.put("playerId", playerId);
+            ratingData.put("ratingId", ratingId);
+            ratingData.put("scheduleId", scheduleId);
+            ratingData.put("matchDate", matchDate);
+            ratingData.put("attackScore", playerRating.get("ATTACK_SCORE"));
+            ratingData.put("defenseScore", playerRating.get("DEFENSE_SCORE"));
+            ratingData.put("staminaScore", playerRating.get("STAMINA_SCORE"));
+            ratingData.put("speedScore", playerRating.get("SPEED_SCORE"));
+            ratingData.put("techniqueScore", playerRating.get("TECHNIQUE_SCORE"));
+            ratingData.put("teamworkScore", playerRating.get("TEAMWORK_SCORE"));
+
+            ratingData.put("participationYn", playerRating.get("PARTICIPATION_YN"));
+
+            // 저장 또는 업데이트
+            if (ratingId == null) {
+                // 새 평가 데이터 생성
+                fmMapper.insertPlayerRating(ratingData);
+            } else {
+                // 기존 평가 데이터 업데이트
+                fmMapper.updatePlayerRating(ratingData);
+            }
+
+            savedCount++;
+        }
+
+        return savedCount;
+    }
+
+
+    @Override
+    public Map<String, Object> balanceTeamsWithML(Map<String, Object> requestMap) {
+        try {
+            List<Map<String, Object>> players = (List<Map<String, Object>>) requestMap.get("players");
+            int teamCount = (Integer) requestMap.get("teamCount");
+            String algorithm = (String) requestMap.get("algorithm");
+
+            logger.debug("ML/DL 팀 밸런싱 요청 - 알고리즘: {}, 팀 수: {}, 선수 수: {}",
+                    algorithm, teamCount, players.size());
+
+            // Flask API 요청 데이터 구성
+            Map<String, Object> flaskRequest = new HashMap<>();
+            flaskRequest.put("players", players);
+            flaskRequest.put("n_teams", teamCount);
+            flaskRequest.put("method", algorithm);
+
+            // Flask API 호출
+            Map<String, Object> flaskResult = executeFlaskBalancing(flaskRequest);
+
+            if (flaskResult.containsKey("teams") && flaskResult.get("teams") instanceof List) {
+                // Flask로부터 받은 팀 정보 변환
+                List<List<Map<String, Object>>> rawTeams = (List<List<Map<String, Object>>>) flaskResult.get("teams");
+                List<Map<String, Object>> formattedTeams = convertFlaskTeamsToLocalFormat(rawTeams);
+
+                // 팀 통계 정보 추가
+                if (flaskResult.containsKey("team_stats")) {
+                    List<Map<String, Object>> teamStats = (List<Map<String, Object>>) flaskResult.get("team_stats");
+                    enrichTeamsWithStats(formattedTeams, teamStats);
+                }
+
+                // 시각화 URL 요청
+                try {
+                    Map<String, Object> visRequest = new HashMap<>();
+                    visRequest.put("teams", rawTeams);
+                    Map<String, Object> visResult = executeFlaskVisualization(visRequest);
+
+                    if (visResult.containsKey("visualization_url")) {
+                        flaskResult.put("visualization_url", visResult.get("visualization_url"));
+                    }
+                } catch (Exception e) {
+                    logger.warn("시각화 생성 중 오류 발생", e);
+                }
+
+                // 결과에 변환된 팀 정보 설정
+                flaskResult.put("teams", formattedTeams);
+                return flaskResult;
+            } else {
+                throw new RuntimeException("Flask API에서 유효한 팀 정보를 반환하지 않음");
+            }
+        } catch (Exception e) {
+            logger.error("ML/DL 팀 밸런싱 처리 중 오류 발생", e);
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
+    /**
+     * Flask 서버에 팀 밸런싱 요청
+     */
+    private Map<String, Object> executeFlaskBalancing(Map<String, Object> requestData) throws Exception {
+        logger.info("Flask API를 통한 팀 밸런싱 처리 시작");
+
+        // Flask 서버 URL 설정
+        String flaskApiUrl = "http://192.168.136.128:5000/football/team_balancing";
+
+        // HTTP 클라이언트 생성
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+
+        // 데이터를 JSON으로 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonData = objectMapper.writeValueAsString(requestData);
+
+        logger.debug("jsonData::{}", jsonData);
+
+        // HTTP 요청 생성
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(flaskApiUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonData))
+                .build();
+
+        logger.debug("Flask API 요청 전송: {}", flaskApiUrl);
+
+        // 요청 전송 및 응답 수신
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // 응답 상태 확인
+        int statusCode = response.statusCode();
+        logger.info("Flask API 응답 상태 코드: {}", statusCode);
+
+        if (statusCode != 200) {
+            logger.error("Flask API 요청 실패. 상태 코드: {}, 응답: {}", statusCode, response.body());
+            throw new RuntimeException("Python 팀 밸런싱 API 호출 실패. 상태 코드: " + statusCode);
+        }
+
+        // 응답 본문을 Map으로 변환
+        Map<String, Object> result = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
+
+        logger.info("Flask API를 통한 팀 밸런싱 완료");
+        return result;
+    }
+
+    /**
+     * Flask 서버에 팀 시각화 요청
+     */
+    private Map<String, Object> executeFlaskVisualization(Map<String, Object> requestData) throws Exception {
+        logger.info("Flask API를 통한 팀 시각화 처리 시작");
+
+        // Flask 서버 URL 설정
+        String flaskApiUrl = "http://192.168.136.128:5000/football/team_visualization";
+
+        // HTTP 클라이언트 생성
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+
+        // 데이터를 JSON으로 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonData = objectMapper.writeValueAsString(requestData);
+
+        // HTTP 요청 생성
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(flaskApiUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonData))
+                .build();
+
+        // 요청 전송 및 응답 수신
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // 응답 상태 확인
+        int statusCode = response.statusCode();
+        if (statusCode != 200) {
+            throw new RuntimeException("시각화 API 호출 실패. 상태 코드: " + statusCode);
+        }
+
+        // 응답 본문을 Map으로 변환
+        return objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
+    }
+
+    /**
+     * Flask 서버에서 반환한 팀 구성을 로컬 형식으로 변환
+     */
+    private List<Map<String, Object>> convertFlaskTeamsToLocalFormat(List<List<Map<String, Object>>> flaskTeams) {
+        List<Map<String, Object>> localTeams = new ArrayList<>();
+
+        for (int i = 0; i < flaskTeams.size(); i++) {
+            List<Map<String, Object>> teamPlayers = flaskTeams.get(i);
+
+            Map<String, Object> team = new HashMap<>();
+            team.put("name", "Team " + (i + 1));
+            team.put("players", teamPlayers);
+
+            // 팀 능력치 평균 계산
+            Map<String, Double> teamAvgStats = calculateTeamAverageStats(teamPlayers);
+            team.put("avgStats", teamAvgStats);
+
+            localTeams.add(team);
+        }
+
+        return localTeams;
+    }
+
+    /**
+     * Flask에서 반환한 팀 통계 정보를 로컬 팀 정보에 추가
+     */
+    private void enrichTeamsWithStats(List<Map<String, Object>> teams, List<Map<String, Object>> teamStats) {
+        for (int i = 0; i < Math.min(teams.size(), teamStats.size()); i++) {
+            Map<String, Object> team = teams.get(i);
+            Map<String, Object> stats = teamStats.get(i);
+
+            // 능력치 통계 추가
+            Map<String, Object> enhancedStats = new HashMap<>();
+            for (Map.Entry<String, Object> entry : stats.entrySet()) {
+                if (entry.getKey().startsWith("avg_") || entry.getKey().startsWith("position_")) {
+                    enhancedStats.put(entry.getKey(), entry.getValue());
+                }
+            }
+
+            team.put("mlStats", enhancedStats);
+        }
+    }
+
+    /**
+     * 팀 선수들의 평균 능력치 계산
+     */
+    private Map<String, Double> calculateTeamAverageStats(List<Map<String, Object>> players) {
+        Map<String, Double> avgStats = new HashMap<>();
+
+        if (players.isEmpty()) {
+            return avgStats;
+        }
+
+        // 모든 능력치 필드를 합산
+        String[] statFields = {"AVG_ATTACK", "AVG_DEFENSE", "AVG_STAMINA", "AVG_SPEED", "AVG_TECHNIQUE", "AVG_TEAMWORK", "TOTAL_AVERAGE"};
+
+        for (String field : statFields) {
+            double sum = 0;
+            int count = 0;
+
+            for (Map<String, Object> player : players) {
+                if (player.containsKey(field) && player.get(field) != null) {
+                    // 숫자로 변환 (String이나 다른 형식일 수 있음)
+                    Double value;
+                    if (player.get(field) instanceof Number) {
+                        value = ((Number)player.get(field)).doubleValue();
+                    } else {
+                        try {
+                            value = Double.parseDouble(player.get(field).toString());
+                        } catch (NumberFormatException e) {
+                            continue; // 변환 불가능한 값은 건너뜀
+                        }
+                    }
+
+                    sum += value;
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                avgStats.put(field.toLowerCase(), sum / count);
+            }
+        }
+
+        // 포지션 분포 계산
+        Map<String, Integer> positionCounts = new HashMap<>();
+        for (Map<String, Object> player : players) {
+            String position = (String) player.get("POSITION");
+            if (position != null) {
+                positionCounts.put(position, positionCounts.getOrDefault(position, 0) + 1);
+            }
+        }
+
+        for (Map.Entry<String, Integer> entry : positionCounts.entrySet()) {
+            avgStats.put("position_" + entry.getKey().toLowerCase(), (double) entry.getValue());
+        }
+
+        return avgStats;
     }
 }
