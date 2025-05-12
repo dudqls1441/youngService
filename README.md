@@ -56,10 +56,23 @@ API: RESTful API, 공공 데이터 포털 API, 금융 데이터 API
 </div>
 
 ### 3. 풋살팀 관리 시스템
+Java 알고리즘과 Python 데이터 분석을 활용하여 효율적인 풋살팀 구성과 관리를 지원하는 시스템입니다.
+주요 특징:
 
-풋살팀 인원 등록 및 관리 기능
-매주 팀원의 능력치 기록 및 추적 시스템
-Java 알고리즘을 활용한 최적의 팀 밸런스 자동 계산
+팀원 관리 시스템: 선수 정보 등록 및 데이터베이스 기반 체계적 관리
+능력치 트래킹: 매주 경기 결과에 따른 팀원별 능력치 기록 및 시간에 따른 변화 추적
+알고리즘 기반 팀 밸런싱: Java 알고리즘을 활용한 최적의 팀 구성 자동 계산
+다양한 팀 구성 방식: 랜덤, 스네이크 드래프트, 포지션별 밸런싱 등 다양한 팀 구성 옵션 제공
+데이터 기반 의사결정: 객관적인 능력치 데이터를 기반으로 공정한 팀 구성 지원
+
+<div align="center">
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.2%20%ED%8C%80%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG" alt="팀 밸런싱 시스템" width="80%">
+  <p><em>능력치 기반 자동 팀 밸런싱 화면</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.3%20%ED%8C%80%EB%B0%B8%EB%9F%B0%EC%8B%B1%20_%20%EC%8A%A4%EB%84%A4%EC%9D%B4%ED%81%AC.PNG" alt="스네이크 드래프트 방식 팀 구성" width="80%">
+  <p><em>스네이크 드래프트 방식의 균형 잡힌 팀 구성</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.4.%20%ED%8F%AC%EC%A7%80%EC%85%98%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG" alt="포지션별 팀 밸런싱" width="80%">
+  <p><em>포지션별 특성을 고려한 팀 밸런싱 결과</em></p>
+</div>
 
 ## 기술 구현 상세
 ### 백엔드 아키텍처
@@ -95,42 +108,6 @@ AI 기반 데이터 예측 모델 추가
 사용자 계정 시스템 및 개인화 기능 강화
 추가 데이터 소스 통합 및 API 확장
 
-## 홈 화면 
-![홈화면]()
-
-![홈화면 날씨 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/1.2.%ED%99%88%20%EB%82%A0%EC%8B%9C.PNG)
-
-
-## 실시간 지하철 도착 정보
-공공 데이터 포털에서 실시간 (30초 마다)으로 호출하여 즐겨찾기 및 검색을 통해 역과 호선에 해당하는 열차의 도착 정보를 보여준다.
-네이버지도 API를 연동해 검색된 역의 위치를 표시한다.
-
-
-![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
-
-![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
-
-## 주식 정보 조회
-Python에서 ORALCE을 연동하고 공공데이터포털 API를 호출하여 DB에 매일 저장하는 로직을 구현하고 
-화면에서 CRUD와 즐겨찾기 기능을 제공한다. 
-주식별 주가 예측 데이터 분석을 python ML구현 및 연동을 통해 시각화하여 화면에서 보여주는 기능을 제공하고,
-기간별 전체 주식의 통계 데이터를 제공한다.
-
-![주식 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/3.%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4.PNG)
-
-![주식 상세 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4.PNG)
-
-![주식 데이터 분석](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.2.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4%20%EB%8D%B0%EC%9D%B4%ED%84%B0%20%EB%B6%84%EC%84%9D.PNG)
-
-![주식 변동 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/5.%EC%A3%BC%EC%8B%9D%20%EB%B9%84%EA%B5%90.PNG)
-
-![풋살팀 관리](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.%ED%92%8B%EC%82%B4%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
-
-![팀 밸런싱](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.2%20%ED%8C%80%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
-
-![팀 밸런싱 - 스네이크 드레프트](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.3%20%ED%8C%80%EB%B0%B8%EB%9F%B0%EC%8B%B1%20_%20%EC%8A%A4%EB%84%A4%EC%9D%B4%ED%81%AC.PNG)
-
-![팀 밸런싱 - 포지션](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.4.%20%ED%8F%AC%EC%A7%80%EC%85%98%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
 
 ![주식 정보 배치 처리](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/8.python%20%EB%B0%B0%EC%B9%98%EC%B2%98%EB%A6%AC%20%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C%20%EB%B0%8F%20DB%20%EC%A0%80%EC%9E%A5.PNG)
 
