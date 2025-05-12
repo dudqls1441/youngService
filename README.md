@@ -23,11 +23,34 @@ API: RESTful API, 공공 데이터 포털 API, 금융 데이터 API
 날씨 정보 JSON 파싱 및 직관적 UI 제공
 교통 정보 데이터 분석 및 대시보드 표시
 
+#### 공공 데이터 포털에서 실시간 (30초 마다)으로 호출하여 즐겨찾기 및 검색을 통해 역과 호선에 해당하는 열차의 도착 정보를 보여준다.
+#### 네이버지도 API를 연동해 검색된 역의 위치를 표시한다.
+
+<div align="center">
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG" alt="실시간 지하철 도착 정보" width="80%">
+  <p><em>역별 실시간 도착 정보 화면</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG" alt="실시간 지하철 도착 정보 상세" width="80%">
+  <p><em>지도 연동 및 상세 정보 화면</em></p>
+</div>
+
 ### 2. 금융 데이터 분석 플랫폼
 
-주식 데이터 자동화 배치 처리 시스템
-시장 트렌드 분석 및 시각적 차트 제공
-개인화된 포트폴리오 트래킹 기능
+#### 자동화된 데이터 파이프라인: Python 스크립트를 통한 일일 주식 데이터 자동 수집 및 DB 저장
+#### 종합 CRUD 시스템: 주식 정보의 완전한 관리 기능 제공
+#### 개인화된 즐겨찾기: 관심 종목을 즐겨찾기하여 빠른 정보 접근
+#### 머신러닝 기반 예측: Python ML 모델을 활용한 주가 예측 시각화
+#### 데이터 기반 분석: 기간별, 종목별 비교 분석 및 통계 데이터 제공
+
+<div align="center">
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/3.%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4.PNG" alt="주식 정보 대시보드" width="80%">
+  <p><em>주식 정보 대시보드 메인 화면</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4.PNG" alt="주식 상세 정보" width="80%">
+  <p><em>종목별 상세 정보 및 차트</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.2.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4%20%EB%8D%B0%EC%9D%B4%ED%84%B0%20%EB%B6%84%EC%84%9D.PNG" alt="주식 데이터 분석" width="80%">
+  <p><em>머신러닝 기반 주가 분석 및 예측</em></p>
+  <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/5.%EC%A3%BC%EC%8B%9D%20%EB%B9%84%EA%B5%90.PNG" alt="주식 변동 비교 정보" width="80%">
+  <p><em>기간별 주가 변동 비교 분석</em></p>
+</div>
 
 ### 3. 풋살팀 관리 시스템
 
@@ -83,6 +106,12 @@ AI 기반 데이터 예측 모델 추가
 ![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
 
 ![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
+
+## 주식 정보 조회
+Python에서 ORALCE을 연동하고 공공데이터포털 API를 호출하여 DB에 매일 저장하는 로직을 구현하고 
+화면에서 CRUD와 즐겨찾기 기능을 제공한다. 
+주식별 주가 예측 데이터 분석을 python ML구현 및 연동을 통해 시각화하여 화면에서 보여주는 기능을 제공하고,
+기간별 전체 주식의 통계 데이터를 제공한다.
 
 ![주식 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/3.%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4.PNG)
 
