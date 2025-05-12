@@ -137,7 +137,7 @@
 
 ## 📞 연락처 및 라이센스
 
-- **이메일**: [your.email@example.com](mailto:your.email@example.com)
+- **이메일**: [your.dudqls1441@naver.com](mailto:dudqls1441@naver.com)
 - **GitHub**: [github.com/dudqls1441](https://github.com/dudqls1441)
 
 이 프로젝트는 MIT 라이센스 하에 배포됩니다.
