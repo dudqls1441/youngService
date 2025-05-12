@@ -71,3 +71,29 @@ AI 기반 데이터 예측 모델 추가
 
 
 ![홈화면](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/1.%ED%99%88.PNG)
+
+![홈화면 날씨 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/1.2.%ED%99%88%20%EB%82%A0%EC%8B%9C.PNG)
+
+![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
+
+![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
+
+![주식 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/3.%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4.PNG)
+
+![주식 상세 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4.PNG)
+
+![주식 데이터 분석](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/4.2.%EC%A3%BC%EC%8B%9D%20%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4%20%EB%8D%B0%EC%9D%B4%ED%84%B0%20%EB%B6%84%EC%84%9D.PNG)
+
+![주식 변동 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/5.%EC%A3%BC%EC%8B%9D%20%EB%B9%84%EA%B5%90.PNG)
+
+![풋살팀 관리](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.%ED%92%8B%EC%82%B4%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
+
+![팀 밸런싱](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.2%20%ED%8C%80%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
+
+![팀 밸런싱 - 스네이크 드레프트](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.3%20%ED%8C%80%EB%B0%B8%EB%9F%B0%EC%8B%B1%20_%20%EC%8A%A4%EB%84%A4%EC%9D%B4%ED%81%AC.PNG)
+
+![팀 밸런싱 - 포지션](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/6.4.%20%ED%8F%AC%EC%A7%80%EC%85%98%20%EB%B0%B8%EB%9F%B0%EC%8B%B1.PNG)
+
+![주식 정보 배치 처리](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/8.python%20%EB%B0%B0%EC%B9%98%EC%B2%98%EB%A6%AC%20%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C%20%EB%B0%8F%20DB%20%EC%A0%80%EC%9E%A5.PNG)
+
+![pythonn FLASK 서버](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/9.%20%EC%86%8C%EC%8A%A4%20java%20flask%20%EC%84%9C%EB%B2%84%20%ED%86%B5%EC%8B%A0.PNG)
