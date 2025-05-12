@@ -69,10 +69,16 @@ AI 기반 데이터 예측 모델 추가
 사용자 계정 시스템 및 개인화 기능 강화
 추가 데이터 소스 통합 및 API 확장
 
-
+## 홈 화면 
 ![홈화면](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/1.%ED%99%88.PNG)
 
 ![홈화면 날씨 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/1.2.%ED%99%88%20%EB%82%A0%EC%8B%9C.PNG)
+
+
+## 실시간 지하철 도착 정보
+공공 데이터 포털에서 실시간 (30초 마다)으로 호출하여 즐겨찾기 및 검색을 통해 역과 호선에 해당하는 열차의 도착 정보를 보여준다.
+네이버지도 API를 연동해 검색된 역의 위치를 표시한다.
+
 
 ![실시간 지하철 도착 정보](https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/2.%EC%8B%A4%EC%8B%9C%EA%B0%84%20%EB%8F%84%EC%B0%A9%20%EC%A0%95%EB%B3%B4.PNG)
 
