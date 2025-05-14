@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'war'
 }
 
 group = 'com.youngbeen'
@@ -23,12 +24,13 @@ repositories {
 	mavenCentral()
 }
 
+
 dependencies {
 	// Spring Boot 기본 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// JSP 관련 의존성
+	// JSP 관련 의존성 (Jakarta EE 9+ 버전으로 통일)
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
 	implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0'
 	implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
@@ -38,7 +40,7 @@ dependencies {
 
 	// Oracle JDBC 관련 의존성
 	implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
-	implementation 'com.oracle.database.nls:orai18n:23.3.0.23.09'  // 이 라인을 추가하세요
+	implementation 'com.oracle.database.nls:orai18n:23.3.0.23.09'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok:1.18.30'
@@ -50,15 +52,31 @@ dependencies {
 	// JSON 파싱
 	implementation 'org.json:json:20210307'
 
-	// Spring Security 태그 라이브러리 (사용하지 않는다면 이 줄은 삭제 가능)
+	// Spring Security 태그 라이브러리
 	implementation 'org.springframework.security:spring-security-taglibs'
+
+	// Proj4J 라이브러리
+	implementation 'org.locationtech.proj4j:proj4j:1.1.5'
+
+	// Tomcat 제공 런타임 의존성
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
 	// 테스트 관련
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// Proj4J 라이브러리 추가
-	implementation 'org.locationtech.proj4j:proj4j:1.1.5'
+	// Bean Validation API (Jakarta EE 9+)
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Spring Security (보안 기능)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Hibernate Core (JPA 구현체)
+	//implementation 'org.hibernate:hibernate-core-jakarta'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// HikariCP (커넥션 풀)
+	implementation 'com.zaxxer:HikariCP'
 }
 
 tasks.named('test') {

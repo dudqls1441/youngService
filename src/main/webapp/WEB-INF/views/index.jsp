@@ -477,9 +477,20 @@
                                     <i class="fas fa-cog me-2"></i>설정
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-sign-out-alt me-2"></i>로그아웃
-                                </a>
+                                <c:choose>
+                                    <c:when test="${empty sessionScope.loginId}">
+                                        <!-- 로그인 되어 있지 않은 경우 -->
+                                        <a class="dropdown-item" href="/member/login">
+                                            <i class="fas fa-sign-in-alt me-2"></i>로그인
+                                        </a>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <!-- 로그인 되어 있는 경우 -->
+                                        <a class="dropdown-item" href="/member/logout">
+                                            <i class="fas fa-sign-out-alt me-2"></i>로그아웃
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </li>
                     </ul>
@@ -493,7 +504,7 @@
                 <!-- 환영 섹션 -->
                 <section class="welcome-section mb-4">
                     <div class="welcome-content">
-                        <h2 class="fw-bold mb-2">안녕하세요, ${userName}님!</h2>
+                        <h2 class="fw-bold mb-2">안녕하세요, ${sessionScope.loginUserName}님!</h2>
                         <p class="mb-4">오늘도 좋은 하루 되세요. 귀하의 대시보드에 새로운 업데이트가 있습니다.</p>
                         <div class="d-flex">
                             <a href="#" class="btn btn-light btn-lg px-4 me-3">

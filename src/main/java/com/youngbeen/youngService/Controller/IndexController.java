@@ -7,6 +7,7 @@ import com.youngbeen.youngService.Service.WeatherService;
 import com.youngbeen.youngService.Service.impl.SubwayServiceImpl;
 import com.youngbeen.youngService.Service.StockService;  // 추가
 import com.youngbeen.youngService.DTO.StockInfoDTO;      // 추가
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,16 @@ public class IndexController {
     @GetMapping(value="/")
     public String home(
             @RequestParam(value = "location", required = false) String location,
+            HttpSession session,
             Model model) {
+
+        // 로그인 여부 확인 (먼저 체크)
+        if (session.getAttribute("loginMember") == null) {
+            // 로그인되지 않은 사용자는 로그인 페이지로
+            logger.debug("비로그인 사용자 - 로그인 페이지로 이동");
+            return "redirect:/member/login";
+        }
+
         // 임시 사용자 ID
         String tmpUserId = "youngbeen";
 
@@ -74,6 +84,8 @@ public class IndexController {
         model.addAttribute("selectedLocation", location);
         model.addAttribute("weather", weather);
 
+        // 로그인된 사용자는 index 페이지로
+        logger.debug("로그인 사용자 - 인덱스 페이지로 이동");
         return "index";
     }
 
