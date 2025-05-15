@@ -28,4 +28,20 @@ public interface MemberService {
      * 아이디로 회원 조회
      */
     Optional<Member> findByUsername(String username);
+
+    /**
+     * 이메일 존재 여부 확인
+     */
+    boolean existsByEmail(String email);
+
+    /**
+     * 인증번호 생성 및 이메일 발송
+     * @return 생성된 인증번호
+     */
+    String generateAndSendVerificationCode(String email);
+
+    /**
+     * 비밀번호 재설정
+     */
+    void resetPassword(String email, String newPassword);
 }

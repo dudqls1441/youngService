@@ -53,11 +53,12 @@ public class IndexController {
         }
 
         // 임시 사용자 ID
-        String tmpUserId = "youngbeen";
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
 
         // 주식 즐겨찾기 정보 가져오기
         Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("userId", tmpUserId);
+        requestMap.put("userId", userId);
         requestMap.put("page", 1);
         requestMap.put("size", 5);  // 메인화면에는 5개만 표시
 

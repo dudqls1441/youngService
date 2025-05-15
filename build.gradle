@@ -75,6 +75,9 @@ dependencies {
 	//implementation 'org.hibernate:hibernate-core-jakarta'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+	//메일
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 	// HikariCP (커넥션 풀)
 	implementation 'com.zaxxer:HikariCP'
 }

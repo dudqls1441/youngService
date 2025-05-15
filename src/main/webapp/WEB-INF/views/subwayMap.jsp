@@ -352,7 +352,7 @@
     <!-- 사이드바 직접 포함 -->
     <div id="sidebar-wrapper">
         <div class="sidebar-heading border-bottom bg-light d-flex align-items-center">
-            <i class="fas fa-cube me-2"></i>영빈
+            <i class="fas fa-cube me-2"></i>YOUNG
         </div>
         <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action list-group-item-light" href="/">
@@ -386,7 +386,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <a class="navbar-brand ms-3 brand-logo" href="#">
-                    <i class="fas fa-cube me-2"></i>영빈
+                    <i class="fas fa-cube me-2"></i>YOUNG
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -558,15 +558,15 @@
                                             <div class="train-header">
                                                 <c:set var="lineColor" value="#0D6EFD"/>
                                                 <c:choose>
-                                                    <c:when test="${item.subwayId == '1호선'}"><c:set var="lineColor" value="#0052A4"/></c:when>
-                                                    <c:when test="${item.subwayId == '2호선'}"><c:set var="lineColor" value="#00A84D"/></c:when>
-                                                    <c:when test="${item.subwayId == '3호선'}"><c:set var="lineColor" value="#EF7C1C"/></c:when>
-                                                    <c:when test="${item.subwayId == '4호선'}"><c:set var="lineColor" value="#00A4E3"/></c:when>
-                                                    <c:when test="${item.subwayId == '5호선'}"><c:set var="lineColor" value="#996CAC"/></c:when>
-                                                    <c:when test="${item.subwayId == '6호선'}"><c:set var="lineColor" value="#CD7C2F"/></c:when>
-                                                    <c:when test="${item.subwayId == '7호선'}"><c:set var="lineColor" value="#747F00"/></c:when>
-                                                    <c:when test="${item.subwayId == '8호선'}"><c:set var="lineColor" value="#E6186C"/></c:when>
-                                                    <c:when test="${item.subwayId == '9호선'}"><c:set var="lineColor" value="#BDB092"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1001'}"><c:set var="lineColor" value="#0052A4"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1002'}"><c:set var="lineColor" value="#00A84D"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1003'}"><c:set var="lineColor" value="#EF7C1C"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1004'}"><c:set var="lineColor" value="#00A4E3"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1005'}"><c:set var="lineColor" value="#996CAC"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1006'}"><c:set var="lineColor" value="#CD7C2F"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1007'}"><c:set var="lineColor" value="#747F00"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1008'}"><c:set var="lineColor" value="#E6186C"/></c:when>
+                                                    <c:when test="${item.SUBWAYID == '1009'}"><c:set var="lineColor" value="#BDB092"/></c:when>
                                                 </c:choose>
                                                 <span class="line-badge" style="background-color: ${lineColor};">${item.subwayId}</span>
                                                 <span class="station-name">${item.statnNm}</span>
@@ -882,6 +882,22 @@
         return colorMap[subwayId] || '#0D6EFD';
     }
 
+    // 라인 Name 가져오기
+    function getLineName(subwayId) {
+        const NameMap = {
+           '1001' : '1호선',
+           '1002' : '2호선',
+           '1003' : '3호선',
+           '1004' : '4호선',
+           '1005' : '5호선',
+           '1006' : '6호선',
+           '1007' : '7호선',
+           '1008' : '8호선',
+           '1009' : '9호선'
+        };
+        return NameMap[subwayId];
+    }
+
     // 상태 클래스 가져오기
     function getStatusClass(arvlMsg) {
         if (arvlMsg.includes('도착')) {
@@ -1098,21 +1114,23 @@
         bookmarkCount.textContent = favorites.data.length + '개';
 
         let html = '';
+        console.log("favorites:::{}",favorites);
         favorites.data.forEach(fav => {
             // 대소문자 관계없이 속성에 접근할 수 있도록 처리
             const line = fav.SUBWAYID || fav.subwayId;
+            const lineName = getLineName(line);
 
             console.log("line:::"+line);
             const station = fav.STATNID || fav.statnId;
             const updnLine = fav.UPDNLINE || fav.updnLine;
 
             // 라인 색상 가져오기 (함수가 존재한다면 사용)
-            const lineColor = (typeof getLineColor === 'function') ? getLineColor(line) : '#0D6EFD';
+            const lineColor = (typeof getLineColor === 'function') ? getLineColor(lineName) : '#0D6EFD';
 
             html +=
                 '<li class="list-group-item d-flex justify-content-between align-items-center">' +
                     '<div>' +
-                        '<span class="line-badge me-2" style="background-color: ' + lineColor + '; color: white; padding: 3px 8px; border-radius: 4px;">' + line + '</span>' +
+                        '<span class="line-badge me-2" style="background-color: ' + lineColor + '; color: white; padding: 3px 8px; border-radius: 4px;">' + lineName + '</span>' +
                         '<span class="fw-bold">' + station + '</span>' +
                         (updnLine ? (' <span class="badge bg-secondary ms-2">' + (updnLine === 'up' ? '상행' : '하행') + '</span>') : '') +
                     '</div>' +

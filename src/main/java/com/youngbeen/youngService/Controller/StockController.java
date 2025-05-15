@@ -155,16 +155,19 @@ public class StockController {
     @ResponseBody
     public Map<String, Object> getFavoriteStocks(
             @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            HttpSession session) {
         logger.debug("/stock/get-favorites 요청 -");
 
         Map<String, Object> requestMap = new HashMap<>();
-        String tmpUserId = "youngbeen";
+        String userId = "";
+
+        userId = (String) session.getAttribute("loginId");
 
         // 페이징 정보 추가
         requestMap.put("page", page);
         requestMap.put("size", size);
-        requestMap.put("userId", tmpUserId);
+        requestMap.put("userId", userId);
 
         List<StockInfoDTO> resultArray = stockService.searchStockfavorites(requestMap);
 
@@ -321,9 +324,10 @@ public class StockController {
 
     @PostMapping("/add-favorite")
     @ResponseBody
-    public Map<String, Object> addFavorite(@RequestBody Map<String, String> request) {
+    public Map<String, Object> addFavorite(@RequestBody Map<String, String> request, HttpSession session) {
         String stockCode = request.get("stockCode");
-        String userId = "youngbeen"; // 임시 사용자 ID
+        String userId = ""; // 임시 사용자 ID
+        userId = (String) session.getAttribute("loginId");
 
         Map<String, Object> response = new HashMap<>();
         response.put("srtnCd", stockCode);
@@ -347,9 +351,11 @@ public class StockController {
 
     @PostMapping("/delete-favorite")
     @ResponseBody
-    public Map<String, Object> deleteFavorite(@RequestBody Map<String, String> request) {
+    public Map<String, Object> deleteFavorite(@RequestBody Map<String, String> request, HttpSession session) {
         String stockCode = request.get("stockCode");
-        String userId = "youngbeen"; // 임시 사용자 ID
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
+
 
         Map<String, Object> response = new HashMap<>();
         response.put("srtnCd", stockCode);

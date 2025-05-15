@@ -5,9 +5,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="로그인 페이지" />
+    <meta name="description" content="비밀번호 찾기 페이지" />
     <meta name="author" content="" />
-    <title>로그인 - 영빈 대시보드</title>
+    <title>비밀번호 찾기 - 영빈 대시보드</title>
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/assets/favicon.ico" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -44,11 +44,11 @@
             border-radius: 20px;
             background-color: white;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-            margin: 0 auto; /* 중앙 정렬을 위해 추가 */
+            margin: 0 auto;
         }
 
         .form-container {
-            width: 100%; /* 기본적으로 전체 너비 사용 */
+            width: 100%;
             padding: 20px;
         }
 
@@ -71,6 +71,13 @@
             margin-bottom: 25px;
             text-align: center;
             color: var(--text-dark);
+        }
+
+        .form-description {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
         }
 
         .form-control {
@@ -113,6 +120,23 @@
             box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
         }
 
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background-color: transparent;
+            height: 50px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+
         .auth-footer {
             text-align: center;
             margin-top: 20px;
@@ -148,6 +172,20 @@
             padding-left: 45px;
         }
 
+        .input-group-append {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+        }
+
+        .input-group-append .btn {
+            height: 100%;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            padding: 0 15px;
+        }
+
         .error-message {
             color: var(--danger-color);
             font-size: 0.85rem;
@@ -156,53 +194,69 @@
             display: block;
         }
 
-        .card-image {
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .step.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .step::after {
+            content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 45%;
-            height: 100%;
-            background-image: url('${pageContext.request.contextPath}/api/placeholder/500/700');
-            background-size: cover;
-            background-position: center;
-            border-top-right-radius: 20px;
-            border-bottom-right-radius: 20px;
+            width: 20px;
+            height: 2px;
+            background-color: var(--bg-light);
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .step:last-child::after {
             display: none;
         }
 
-        .remember-me {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
+        .step.completed {
+            background-color: var(--success-color);
+            color: white;
         }
 
-        .remember-me .form-check-input {
-            margin-right: 8px;
-        }
-
-        .remember-me label {
-            font-size: 0.9rem;
-            color: var(--text-light);
+        .step.completed::after {
+            background-color: var(--success-color);
         }
 
         @media (min-width: 768px) {
             .auth-container {
-                max-width: 500px; /* 더 작게 조정 */
+                max-width: 500px;
                 overflow: hidden;
                 padding: 40px;
             }
 
             .form-container {
-                width: 100%; /* 전체 너비 사용 */
+                width: 100%;
                 padding: 0;
-            }
-
-            .card-image {
-                display: none; /* 이미지 숨기기 */
             }
         }
 
-        /* 큰 화면에서도 중앙 정렬 유지 */
         @media (min-width: 992px) {
             .auth-container {
                 max-width: 550px;
@@ -220,7 +274,20 @@
                 <p class="mt-2 text-muted">개인화된 대시보드 서비스</p>
             </div>
 
-            <h2 class="form-title">로그인</h2>
+            <h2 class="form-title">비밀번호 찾기</h2>
+
+            <div class="step-indicator">
+                <div class="step active">1</div>
+                <div class="step">2</div>
+            </div>
+
+            <p class="form-description">가입 시 등록한 이메일 주소를 입력하시면 인증번호를 보내드립니다.</p>
+
+            <c:if test="${not empty successMessage}">
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${successMessage}
+                </div>
+            </c:if>
 
             <c:if test="${not empty errorMessage}">
                 <div class="alert alert-danger" role="alert">
@@ -228,28 +295,18 @@
                 </div>
             </c:if>
 
-            <form action="${pageContext.request.contextPath}/member/login" method="post">
+            <form action="${pageContext.request.contextPath}/member/password/sendCode" method="post" id="sendCodeForm">
                 <div class="input-group">
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="아이디" required>
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="이메일 주소" required>
                 </div>
 
-                <div class="input-group">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="비밀번호" required>
-                </div>
-
-                <div class="remember-me">
-                    <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-                    <label class="form-check-label" for="rememberMe">로그인 상태 유지</label>
-                </div>
-
-                <button type="submit" class="btn btn-primary">로그인</button>
+                <button type="submit" class="btn btn-primary">인증번호 받기</button>
             </form>
 
             <div class="auth-footer">
-                <p>계정이 없으신가요? <a href="/member/register">회원가입</a></p>
-                <p class="mt-2"><a href="/member/password">비밀번호를 잊으셨나요?</a></p>
+                <p>계정이 기억나셨나요? <a href="${pageContext.request.contextPath}/member/login">로그인</a></p>
+                <p class="mt-2">계정이 없으신가요? <a href="${pageContext.request.contextPath}/member/register">회원가입</a></p>
             </div>
         </div>
     </div>

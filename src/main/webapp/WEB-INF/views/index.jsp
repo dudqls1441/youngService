@@ -403,7 +403,7 @@
     <!-- 사이드바 -->
     <div id="sidebar-wrapper">
         <div class="sidebar-heading border-bottom bg-light d-flex align-items-center">
-            <i class="fas fa-cube me-2"></i>영빈
+            <i class="fas fa-cube me-2"></i>YOUNG
         </div>
         <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action list-group-item-light active" href="${pageContext.request.contextPath}/">
@@ -436,7 +436,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <a class="navbar-brand ms-3 brand-logo" href="#">
-                    <i class="fas fa-cube me-2"></i>영빈
+                    <i class="fas fa-cube me-2"></i>YOUNG
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -480,13 +480,13 @@
                                 <c:choose>
                                     <c:when test="${empty sessionScope.loginId}">
                                         <!-- 로그인 되어 있지 않은 경우 -->
-                                        <a class="dropdown-item" href="/member/login">
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/member/login">
                                             <i class="fas fa-sign-in-alt me-2"></i>로그인
                                         </a>
                                     </c:when>
                                     <c:otherwise>
                                         <!-- 로그인 되어 있는 경우 -->
-                                        <a class="dropdown-item" href="/member/logout">
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/member/logout">
                                             <i class="fas fa-sign-out-alt me-2"></i>로그아웃
                                         </a>
                                     </c:otherwise>
@@ -583,39 +583,39 @@
                                                         <c:set var="lineColor" value="#0D6EFD"/>
                                                         <c:set var="shortLineId" value="${subway.SUBWAYID}"/>
                                                         <c:choose>
-                                                            <c:when test="${subway.SUBWAYID == '1호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1001'}">
                                                                 <c:set var="lineColor" value="#0052A4"/>
                                                                 <c:set var="shortLineId" value="1"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '2호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1002'}">
                                                                 <c:set var="lineColor" value="#00A84D"/>
                                                                 <c:set var="shortLineId" value="2"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '3호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1003'}">
                                                                 <c:set var="lineColor" value="#EF7C1C"/>
                                                                 <c:set var="shortLineId" value="3"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '4호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1004'}">
                                                                 <c:set var="lineColor" value="#00A4E3"/>
                                                                 <c:set var="shortLineId" value="4"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '5호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1005'}">
                                                                 <c:set var="lineColor" value="#996CAC"/>
                                                                 <c:set var="shortLineId" value="5"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '6호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1006'}">
                                                                 <c:set var="lineColor" value="#CD7C2F"/>
                                                                 <c:set var="shortLineId" value="6"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '7호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1007'}">
                                                                 <c:set var="lineColor" value="#747F00"/>
                                                                 <c:set var="shortLineId" value="7"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '8호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1008'}">
                                                                 <c:set var="lineColor" value="#E6186C"/>
                                                                 <c:set var="shortLineId" value="8"/>
                                                             </c:when>
-                                                            <c:when test="${subway.SUBWAYID == '9호선'}">
+                                                            <c:when test="${subway.SUBWAYID == '1009'}">
                                                                 <c:set var="lineColor" value="#BDB092"/>
                                                                 <c:set var="shortLineId" value="9"/>
                                                             </c:when>
@@ -755,7 +755,7 @@
 
     $(document).ready(function() {
         // 드롭다운 메뉴 항목 클릭 시 이벤트 처리
-        $('.dropdown-item').click(function(e) {
+        $('.dropdown-item:not([href*="/member/"])').click(function(e) {
             e.preventDefault();
             const location = $(this).text();
 

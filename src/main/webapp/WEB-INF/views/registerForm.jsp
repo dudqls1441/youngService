@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="회원가입 페이지" />
     <meta name="author" content="" />
-    <title>회원가입 - 영빈 대시보드</title>
+    <title>회원가입 - YOUNG 대시보드</title>
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/assets/favicon.ico" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -195,7 +195,7 @@
         <div class="form-container">
             <div class="logo-container">
                 <a href="${pageContext.request.contextPath}/" class="brand-logo">
-                    <i class="fas fa-cube me-2"></i>영빈
+                    <i class="fas fa-cube me-2"></i>YOUNG
                 </a>
                 <p class="mt-2 text-muted">개인화된 대시보드 서비스</p>
             </div>
@@ -227,11 +227,6 @@
                 <div class="input-group">
                     <i class="fas fa-lock input-icon"></i>
                     <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="비밀번호 확인" required>
-                </div>
-
-                <div class="input-group">
-                    <i class="fas fa-user-circle input-icon"></i>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="실명" required>
                 </div>
 
                 <div class="input-group">

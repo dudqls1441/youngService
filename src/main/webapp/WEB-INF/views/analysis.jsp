@@ -194,7 +194,7 @@
         <!-- 사이드바 직접 포함 -->
         <div id="sidebar-wrapper">
             <div class="sidebar-heading border-bottom bg-light d-flex align-items-center">
-                <i class="fas fa-cube me-2"></i>영빈
+                <i class="fas fa-cube me-2"></i>YOUNG
             </div>
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action list-group-item-light" href="/">
@@ -230,7 +230,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <a class="navbar-brand ms-3 brand-logo" href="#">
-                        <i class="fas fa-cube me-2"></i>영빈
+                        <i class="fas fa-cube me-2"></i>YOUNG
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>

@@ -249,7 +249,7 @@
   <!-- 사이드바 직접 포함 -->
   <div id="sidebar-wrapper">
     <div class="sidebar-heading border-bottom bg-light d-flex align-items-center">
-      <i class="fas fa-futbol me-2"></i>풋살 밸런싱
+      <i class="fas fa-futbol me-2"></i>YOUNG
     </div>
     <div class="list-group list-group-flush">
       <a class="list-group-item list-group-item-action list-group-item-light" href="/">
@@ -282,7 +282,7 @@
           <i class="fas fa-bars"></i>
         </button>
         <a class="navbar-brand ms-3 brand-logo" href="#">
-          <i class="fas fa-futbol me-2"></i>풋살 밸런싱
+          <i class="fas fa-futbol me-2"></i>YOUNG
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -313,7 +313,7 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <img src="/api/placeholder/80/80" alt="Profile" class="profile-thumb me-2">
-                <span>김영빈</span>
+                <span>${sessionScope.loginUserName}</span>
               </a>
               <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="#">

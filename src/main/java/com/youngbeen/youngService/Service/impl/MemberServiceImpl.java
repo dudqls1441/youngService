@@ -9,12 +9,15 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 
 @Service
@@ -29,6 +32,9 @@ public class MemberServiceImpl implements MemberService {
 
     @Autowired
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JavaMailSender mailSender; // 이메일 발송 서비스 (application.properties에 설정 필요)
 
     /**
      * 회원가입
@@ -50,7 +56,6 @@ public class MemberServiceImpl implements MemberService {
         Member member = Member.builder()
                 .id(memberDto.getId())
                 .password(passwordEncoder.encode(memberDto.getPassword()))
-                .name(memberDto.getName())
                 .username(memberDto.getUsername())
                 .email(memberDto.getEmail())
                 .role(Member.Role.USER)
@@ -113,13 +118,47 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.findByUsername(username);
     }
 
-    public void encryptAllPasswords() {
-        List<Member> members = memberRepository.findAll();
-        for (Member member : members) {
-            if (!member.getPassword().startsWith("$2a$")) {  // BCrypt 형식인지 확인
-                member.setPassword(passwordEncoder.encode(member.getPassword()));
-                memberRepository.save(member);
-            }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return memberRepository.existsByEmail(email);
+    }
+
+    @Override
+    public String generateAndSendVerificationCode(String email) {
+        // 6자리 랜덤 숫자 생성
+        String verificationCode = String.format("%06d", new Random().nextInt(999999));
+        logger.debug("인증번호 생성: {}", verificationCode);
+
+        // 이메일 발송
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("[YOUNG 대시보드] 비밀번호 재설정 인증번호");
+        mailMessage.setText("안녕하세요. YOUNG 대시보드입니다.\n\n" +
+                "비밀번호 재설정을 위한 인증번호는 " + verificationCode + " 입니다.\n" +
+                "인증번호는 5분간 유효합니다.\n\n" +
+                "본인이 요청하지 않은 경우 이 메일을 무시하셔도 됩니다.");
+
+        try {
+            mailSender.send(mailMessage);
+            logger.debug("인증메일 발송 성공: {}", email);
+            return verificationCode;
+        } catch (Exception e) {
+            logger.error("인증메일 발송 실패: {}", e.getMessage());
+            throw new RuntimeException("인증메일 발송에 실패했습니다.", e);
         }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String newPassword) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일로 등록된 계정이 없습니다."));
+
+        // 비밀번호 암호화 및 업데이트
+        member.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+
+        logger.debug("비밀번호 재설정 완료: {}", email);
     }
 }
