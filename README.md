@@ -51,6 +51,7 @@
 - **개인화된 즐겨찾기**: 관심 종목을 즐겨찾기하여 빠른 정보 접근
 - **머신러닝 기반 예측**: Python ML 모델을 활용한 주가 예측 시각화
 - **데이터 기반 분석**: 기간별, 종목별 비교 분석 및 통계 데이터 제공
+- **HTML 테이블 그리드 + AG Grid(라이브러리) 사용
 
 <div align="center">
   <img src="https://github.com/dudqls1441/youngService/blob/master/20250508_v0.1/3.%EC%A3%BC%EC%8B%9D%20%EC%A0%95%EB%B3%B4.PNG" alt="주식 정보 대시보드" width="80%">
