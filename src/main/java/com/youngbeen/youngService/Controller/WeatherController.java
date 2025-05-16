@@ -22,18 +22,6 @@ public class WeatherController {
     @Autowired
     private WeatherService weatherService;
 
-/*
-    @GetMapping("/api/weather")
-    public WeatherDTO getWeatherInfo(@RequestParam(value = "location", required = false) String location) {
-        logger.debug("getWeatherInfo Start");
-        logger.debug("location::"+location);
-        if (location == null || location.isBlank()) {
-            location = "인천";
-        }
-
-        return weatherService.getWeatherInfo(location);
-    }
-*/
 @GetMapping("/api/weather")
 @ResponseBody
     public Map<String, Object> getWeatherInfo(@RequestParam(value = "location", required = false) String location) {

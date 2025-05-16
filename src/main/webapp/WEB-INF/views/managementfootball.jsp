@@ -246,92 +246,13 @@
 <body>
 <!-- 전체 래퍼 -->
 <div class="wrapper" id="wrapper">
-  <!-- 사이드바 직접 포함 -->
-  <div id="sidebar-wrapper">
-    <div class="sidebar-heading border-bottom bg-light d-flex align-items-center">
-      <i class="fas fa-futbol me-2"></i>YOUNG
-    </div>
-    <div class="list-group list-group-flush">
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/">
-        <i class="fas fa-home me-2"></i>홈
-      </a>
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/dashboard">
-        <i class="fas fa-tachometer-alt me-2"></i>지하철 도착 정보
-      </a>
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/stockinfo">
-        <i class="fas fa-chart-line me-2"></i>주식 종목 정보
-      </a>
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/analysis">
-        <i class="fas fa-chart-pie me-2"></i>분석
-      </a>
-      <a class="list-group-item list-group-item-action list-group-item-light" href="/performance">
-        <i class="fas fa-chart-bar me-2"></i>주식 비교
-      </a>
-      <a class="list-group-item list-group-item-action list-group-item-light active" href="/managementfootball">
-        <i class="fas fa-futbol me-2"></i>풋살 밸런싱
-      </a>
-    </div>
-  </div>
+  <!-- 사이드바 include -->
+  <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 
   <!-- 콘텐츠 래퍼 -->
   <div id="content-wrapper">
-    <!-- 상단 내비게이션 직접 포함 -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="container-fluid">
-        <button class="btn btn-primary" id="sidebarToggle">
-          <i class="fas fa-bars"></i>
-        </button>
-        <a class="navbar-brand ms-3 brand-logo" href="#">
-          <i class="fas fa-futbol me-2"></i>YOUNG
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="fas fa-home me-1"></i>대시보드
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="fas fa-list me-1"></i>프로젝트
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="fas fa-users me-1"></i>팀원
-              </a>
-            </li>
-            <li class="nav-item position-relative">
-              <a class="nav-link" href="#">
-                <i class="fas fa-bell me-1"></i>알림
-                <span class="notification-badge">3</span>
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img src="/api/placeholder/80/80" alt="Profile" class="profile-thumb me-2">
-                <span>${sessionScope.loginUserName}</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="#">
-                  <i class="fas fa-user me-2"></i>프로필
-                </a>
-                <a class="dropdown-item" href="#">
-                  <i class="fas fa-cog me-2"></i>설정
-                </a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">
-                  <i class="fas fa-sign-out-alt me-2"></i>로그아웃
-                </a>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <!-- 상단 내비게이션 include -->
+    <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
     <!-- 페이지 콘텐츠 -->
     <div id="page-content-wrapper">
