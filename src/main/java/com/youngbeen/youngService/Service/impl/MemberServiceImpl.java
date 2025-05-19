@@ -1,8 +1,13 @@
 package com.youngbeen.youngService.Service.impl;
 
-import com.youngbeen.youngService.Controller.IndexController;
+import com.youngbeen.youngService.DTO.CertificateDTO;
 import com.youngbeen.youngService.DTO.MemberDTO;
+import com.youngbeen.youngService.DTO.MemberDetailDTO;
+import com.youngbeen.youngService.Entity.Certificate;
 import com.youngbeen.youngService.Entity.Member;
+import com.youngbeen.youngService.Entity.MemberDetail;
+import com.youngbeen.youngService.Repository.CertificateRepository;
+import com.youngbeen.youngService.Repository.MemberDetailRepository;
 import com.youngbeen.youngService.Repository.MemberRepository;
 import com.youngbeen.youngService.Service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -14,21 +19,33 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberServiceImpl implements MemberService {
-
     private static final Logger logger = LoggerFactory.getLogger(MemberServiceImpl.class);
+
+    private final CommonServiceImpl commonServiceImpl;
 
     @Autowired
     private final MemberRepository memberRepository;
+
+    @Autowired
+    private final MemberDetailRepository memberDetailRepository;
+
+    @Autowired
+    private final CertificateRepository certificateRepository;
 
     @Autowired
     private final PasswordEncoder passwordEncoder;
@@ -127,7 +144,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public String generateAndSendVerificationCode(String email) {
         // 6자리 랜덤 숫자 생성
-        String verificationCode = String.format("%06d", new Random().nextInt(999999));
+        String verificationCode = generateVerificationCode();
         logger.debug("인증번호 생성: {}", verificationCode);
 
         // 이메일 발송
@@ -161,4 +178,117 @@ public class MemberServiceImpl implements MemberService {
 
         logger.debug("비밀번호 재설정 완료: {}", email);
     }
+
+    @Transactional(readOnly = true)
+    public boolean isEmailVerified(String memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+
+        return Integer.valueOf(1).equals(member.getEmailVerified());
+    }
+
+
+    /**
+     * 회원 상세 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public MemberDetail getMemberDetailByMemberId(String memberId) {
+        Optional<MemberDetail> optionalMemberDetail = memberDetailRepository.findByMemberId(memberId);
+        return optionalMemberDetail.orElse(null);
+    }
+
+    /**
+     * 회원 상세 정보 업데이트
+     */
+    @Transactional
+    public void updateMemberDetail(String memberId, MemberDetailDTO dto, MultipartFile profileImage) {
+        // 회원 기본 정보 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        // 회원 상세 정보 조회 또는 생성
+        MemberDetail memberDetail = memberDetailRepository.findByMemberId(memberId)
+                .orElse(new MemberDetail());
+
+        // 회원 연결
+        if (memberDetail.getMember() == null) {
+            memberDetail.setMember(member);
+        }
+
+        logger.debug("ybyb updateMemberDetail dto :::{}",dto);
+
+        // DTO에서 엔티티로 데이터 복사
+        memberDetail.setBirthDate(dto.getBirthDate());
+        memberDetail.setPhoneNumber(dto.getPhoneNumber());
+        memberDetail.setGender(dto.getGender());
+        memberDetail.setPostcode(dto.getPostcode());
+        memberDetail.setAddress1(dto.getAddress1());
+        memberDetail.setAddress2(dto.getAddress2());
+        memberDetail.setHighSchool(dto.getHighSchool());
+        memberDetail.setHighSchoolGraduationYear(dto.getHighSchoolGraduationYear());
+        memberDetail.setUniversity(dto.getUniversity());
+        memberDetail.setUniversityStatus(dto.getUniversityStatus());
+        memberDetail.setMajor(dto.getMajor());
+        memberDetail.setGpa(dto.getGpa());
+        memberDetail.setUniversityEntranceYear(dto.getUniversityEntranceYear());
+        memberDetail.setUniversityGraduationYear(dto.getUniversityGraduationYear());
+
+        // 프로필 이미지 처리
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String imageUrl = commonServiceImpl.uploadProfileImage(profileImage, memberId);
+            memberDetail.setProfileImage(imageUrl);
+        }
+
+        // 저장
+        memberDetailRepository.save(memberDetail);
+
+        // 자격증 정보 업데이트
+        updateCertificates(memberDetail, dto.getCertificates());
+    }
+
+    /**
+     * 자격증 정보 업데이트
+     */
+    private void updateCertificates(MemberDetail memberDetail, List<CertificateDTO> certificateDtos) {
+        // 기존 자격증 삭제
+        certificateRepository.deleteAllByMemberDetailId(memberDetail.getId());
+
+        // 새 자격증 추가
+        if (certificateDtos != null && !certificateDtos.isEmpty()) {
+            List<Certificate> certificates = new ArrayList<>();
+
+            for (CertificateDTO dto : certificateDtos) {
+                Certificate certificate = new Certificate();
+                certificate.setMemberDetail(memberDetail);
+                certificate.setName(dto.getName());
+                certificate.setIssuer(dto.getIssuer());
+                certificate.setAcquisitionDate(dto.getAcquisitionDate());
+                certificate.setExpirationDate(dto.getExpirationDate());
+                certificates.add(certificate);
+            }
+
+            certificateRepository.saveAll(certificates);
+        }
+    }
+
+
+    @Transactional
+    public void verifyEmail(String memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+
+        member.setEmailVerified(1);
+        memberRepository.save(member);
+    }
+
+
+    /**
+     * 인증 코드 생성
+     */
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000); // 6자리 숫자
+        return String.valueOf(code);
+    }
+
 }

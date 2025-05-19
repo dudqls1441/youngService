@@ -11,7 +11,7 @@ import java.util.Optional;
 @Mapper
 public interface FootballManagementMapper {
     /**
-     * 종목명이나 코드로 검색
+     * 선수 평균 가져오기
      */
     List<Map<String, Object>> getPlayerAverageRatings();
 
@@ -22,9 +22,16 @@ public interface FootballManagementMapper {
 
 
     /**
+     * 스케줄 ID 가져오기
+     */
+    Map getScheduleById(Integer scheduleId);
+
+
+    /**
      * 종목명이나 코드로 검색
      */
     List<Map> getMatchSchedules();
+
 
     /**
      * 선수 정보 등록

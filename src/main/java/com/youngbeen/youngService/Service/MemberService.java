@@ -1,7 +1,9 @@
 package com.youngbeen.youngService.Service;
 
 import com.youngbeen.youngService.DTO.MemberDTO;
+import com.youngbeen.youngService.DTO.MemberDetailDTO;
 import com.youngbeen.youngService.Entity.Member;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -44,4 +46,10 @@ public interface MemberService {
      * 비밀번호 재설정
      */
     void resetPassword(String email, String newPassword);
+
+    void verifyEmail(String memberId);
+
+    boolean isEmailVerified(String memberId);
+
+    void updateMemberDetail(String memberId, MemberDetailDTO dto, MultipartFile profileImage);
 }

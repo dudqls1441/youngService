@@ -46,4 +46,6 @@ public interface FootballManagementService {
      * @return 팀 밸런싱 결과
      */
     Map<String, Object> balanceTeamsWithML(Map<String, Object> requestMap);
+
+    List<Map<String, Object>> getPreviousWeekRatings(Integer scheduleId);
 }

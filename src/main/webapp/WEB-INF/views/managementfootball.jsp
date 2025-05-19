@@ -311,6 +311,9 @@
                     <button id="btnSaveRatings" class="btn btn-success ms-2">
                       <i class="fas fa-save"></i> 저장
                     </button>
+                    <button id="btnCopyPrevWeekRatings" class="btn btn-info ms-2">
+                        <i class="fas fa-copy"></i> 지난주 데이터 불러오기
+                      </button>
                   </div>
                 </div>
 
@@ -582,6 +585,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnRegenTeams').addEventListener('click', createTeams);
     document.getElementById('btnSelectAll').addEventListener('click', selectAllPlayers);
     document.getElementById('btnDeselectAll').addEventListener('click', deselectAllPlayers);
+
+    // 지난주 데이터 불러오기 버튼 이벤트 리스너 추가
+    document.getElementById('btnCopyPrevWeekRatings').addEventListener('click', loadPreviousWeekRatings);
 });
 
 // 페이지 로드 시 경기 일정 데이터 가져오기
@@ -675,7 +681,48 @@ function loadPlayerRatings() {
             console.error('Error:', error);
             tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">데이터 로드 중 오류가 발생했습니다.</td></tr>';
         });
-}
+    }
+
+    // 지난주 데이터 가져오기
+    function loadPreviousWeekRatings() {
+      const scheduleId = document.getElementById('matchSchedule').value;
+
+      // 기본 평가인 경우 경고 표시
+      if (scheduleId === 'base') {
+        alert('기본 평가에서는 이 기능을 사용할 수 없습니다. 특정 일정을 선택해주세요.');
+        return;
+      }
+
+      // 확인 메시지
+      if (!confirm('지난주 선수 평가 데이터를 불러와 현재 데이터를 덮어쓰시겠습니까?')) {
+        return;
+      }
+
+      // 로딩 상태 표시
+      const tableBody = document.querySelector('#playerRatingsTable tbody');
+      tableBody.innerHTML = '<tr><td colspan="12" class="text-center">지난주 데이터를 불러오는 중...</td></tr>';
+
+      // API 호출
+      fetch('/football/getPreviousWeekRatings?scheduleId=' + scheduleId)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.data)) {
+            displayPlayerRatings(data.data);
+
+            // 알림 표시
+            alert('지난주 데이터를 성공적으로 불러왔습니다. 변경사항을 저장하려면 "저장" 버튼을 클릭하세요.');
+          } else {
+            console.error('Invalid data format:', data);
+            tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">지난주 데이터를 가져오는데 실패했습니다.</td></tr>';
+            alert('지난주 데이터를 불러오는데 실패했습니다: ' + (data.message || '알 수 없는 오류'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">지난주 데이터를 가져오는 중 오류가 발생했습니다.</td></tr>';
+          alert('지난주 데이터를 불러오는 중 오류가 발생했습니다.');
+        });
+    }
 
 // 선수 평가 데이터 화면에 표시
 function displayPlayerRatings(players) {
@@ -1131,6 +1178,8 @@ function displayTeamResults(teams) {
             const name = player.NAME || player.name;
             const positionBadgeClass = getPositionBadgeClass(position);
 
+            console.log("avgScore:::",avgScore);
+
             playersList +=
                 '<div class="team-player d-flex align-items-center justify-content-between">' +
                     '<div>' +
@@ -1191,9 +1240,15 @@ function countPosition(players, position) {
 }
 
 // 선수 총점 계산
-function calculateTotalScore(player) {
+function old_calculateTotalScore(player) {
     return (player.ATTACK_SCORE + player.DEFENSE_SCORE + player.STAMINA_SCORE +
             player.SPEED_SCORE + player.TECHNIQUE_SCORE + player.TEAMWORK_SCORE) / 6;
+}
+
+// 선수 총점 계산
+function calculateTotalScore(player) {
+    return (player.AVG_ATTACK + player.AVG_DEFENSE + player.AVG_STAMINA +
+            player.AVG_SPEED + player.AVG_TECHNIQUE + player.AVG_TEAMWORK) / 6;
 }
 
 // 포지션 배지 클래스 가져오기

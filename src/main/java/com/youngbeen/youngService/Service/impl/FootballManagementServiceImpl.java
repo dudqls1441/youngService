@@ -15,10 +15,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FootballManagementServiceImpl implements FootballManagementService {
@@ -45,6 +43,50 @@ public class FootballManagementServiceImpl implements FootballManagementService 
 
         List<Map<String, Object>> result = fmMapper.getPlayerAverageRatings();
         return result;
+    }
+
+    /**
+     * 지난주 선수 평가 데이터 가져오기
+     */
+    public List<Map<String, Object>> getPreviousWeekRatings(Integer scheduleId) {
+        // 1. 이전 주차 scheduleId 계산 (현재 scheduleId - 1)
+        Integer prevScheduleId = scheduleId - 1;
+
+        // 2. 이전 scheduleId가 유효한지 확인
+        Map<String, Object> prevSchedule = fmMapper.getScheduleById(prevScheduleId);
+        if (prevSchedule == null) {
+            throw new RuntimeException("이전 주차 일정을 찾을 수 없습니다: " + prevScheduleId);
+        }
+
+        // 3. 이전 일정이 완료 상태인지 확인
+        String status = (String) prevSchedule.get("STATUS");
+        if (!"COMPLETED".equals(status)) {
+            throw new RuntimeException("이전 주차 일정이 완료되지 않았습니다: " + prevScheduleId);
+        }
+
+        // 4. 이전 일정의 선수 평가 데이터 가져오기
+        Map<String, Object> params = new HashMap<>();
+        params.put("scheduleId", prevScheduleId);
+        params.put("isBaseRating", false);
+
+        List<Map> prevRatings = fmMapper.findAllPlayer(params);
+
+        // 5. 데이터가 없는 경우 확인
+        if (prevRatings == null || prevRatings.isEmpty()) {
+            throw new RuntimeException("이전 주차에 선수 평가 데이터가 없습니다.");
+        }
+
+        // 6. 현재 일정에 맞게 데이터 변환
+        return prevRatings.stream()
+                .map(r -> {
+                    // 복사본 생성하여 원본 데이터 유지
+                    Map<String, Object> newRating = new HashMap<>(r);
+                    // SCHEDULE_ID를 현재 일정 ID로 변경
+                    newRating.put("SCHEDULE_ID", scheduleId);
+                    newRating.put("RATING_ID", null); // 새로운 평가로 처리하기 위해 RATING_ID 제거
+                    return newRating;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

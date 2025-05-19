@@ -195,6 +195,7 @@
 
   <!-- 콘텐츠 래퍼 -->
   <div id="content-wrapper">
+
     <!-- 상단 내비게이션 include -->
     <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
@@ -728,3 +729,5 @@
 </script>
 </body>
 </html>
+
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

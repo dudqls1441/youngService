@@ -26,7 +26,7 @@
                         <span>${userName}</span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="${pageContext.request.contextPath}/member/profile">
                             <i class="fas fa-user me-2"></i>프로필
                         </a>
                         <a class="dropdown-item" href="#">

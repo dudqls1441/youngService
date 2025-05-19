@@ -17,6 +17,10 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 
     boolean existsByEmail(String email);
 
+    Optional<Member> getMemberById(String id);
+
+
+
 //    findby[속성명] : 특정 속성으로 데이터 조회
 //    existsBy[속성명]: 특정 속성을 가진 데이터의 존재 여부 확인
 //    countBy[속성명]: 특정 속성을 가진 데이터의 개수 반환

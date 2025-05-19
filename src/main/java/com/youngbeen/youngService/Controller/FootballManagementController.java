@@ -96,6 +96,29 @@ public class FootballManagementController {
     }
 
     /**
+     * 지난주 선수 평가 데이터 가져오기
+     */
+    @GetMapping("/getPreviousWeekRatings")
+    @ResponseBody
+    public Map<String, Object> getPreviousWeekRatings(@RequestParam Integer scheduleId) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 서비스 메서드 호출
+            List<Map<String, Object>> ratings = fmService.getPreviousWeekRatings(scheduleId);
+
+            response.put("success", true);
+            response.put("data", ratings);
+            return response;
+        } catch (Exception e) {
+            logger.error("지난주 선수 평가 데이터 조회 중 오류 발생", e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return response;
+        }
+    }
+
+    /**
      * 신규 선수 등록 API
      */
     @PostMapping("/registerPlayer")

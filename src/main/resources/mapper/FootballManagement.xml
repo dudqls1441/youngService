@@ -43,6 +43,32 @@
         ORDER BY SCHEDULE_ID DESC
     </select>
 
+    <!-- 일정 정보 가져오기 -->
+    <select id="getScheduleById" parameterType="Integer" resultType="java.util.Map">
+        SELECT
+            SCHEDULE_ID,
+            MATCH_DATE,
+            STATUS,
+            NOTE
+        FROM
+            MATCH_SCHEDULE
+        WHERE
+            SCHEDULE_ID = #{scheduleId}
+    </select>
+
+    <!-- 일정별 선수 목록 가져오기 -->
+    <select id="getPlayersByScheduleId" parameterType="Integer" resultType="java.util.Map">
+        SELECT DISTINCT
+            P.PLAYER_ID,
+            P.NAME
+        FROM
+            PLAYERS P
+        JOIN
+            PLAYERBASERATINGS PBR ON P.PLAYER_ID = PBR.PLAYER_ID
+        WHERE
+            PBR.SCHEDULE_ID = #{scheduleId}
+    </select>
+
 
     <!-- 선수 정보 등록 -->
     <insert id="insertPlayer" parameterType="Map" useGeneratedKeys="true" keyProperty="playerId" keyColumn="PLAYER_ID">
