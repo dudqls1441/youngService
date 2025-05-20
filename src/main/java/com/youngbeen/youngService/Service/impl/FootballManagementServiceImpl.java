@@ -37,6 +37,66 @@ public class FootballManagementServiceImpl implements FootballManagementService 
         return result;
     }
 
+    /**
+     * 선수 데이터 조회 - 최근 5경기 정보
+     * @param params 조회 파라미터 (playerName 필수)
+     * @return 선수의 최근 5경기 데이터 목록 또는 빈 리스트
+     */
+    @Override
+    public List<Map<String, Object>> getPlayerData(Map<String, Object> params) {
+        logger.info("선수 정보 조회 getPlayerData 시작, 파라미터: {}", params);
+
+        // 파라미터 검증
+        String playerName = (String) params.get("playerName");
+        if (playerName == null || playerName.trim().isEmpty()) {
+            logger.error("선수 이름이 제공되지 않았습니다.");
+            throw new IllegalArgumentException("선수 이름이 필요합니다.");
+        }
+
+        // 선수 ID 조회
+        String playerId = fmMapper.getPlayerId(playerName);
+
+        // 선수가 존재하지 않는 경우 예외 처리
+        if (playerId == null || playerId.isEmpty()) {
+            logger.warn("선수를 찾을 수 없습니다: {}", playerName);
+            throw new NoSuchElementException("선수를 찾을 수 없습니다: " + playerName);
+        }
+
+        // 선수의 최근 5경기 데이터 조회
+        List<Map<String, Object>> playerMatchData = fmMapper.getPlayerData(playerId);
+
+        // 결과 로깅
+        logger.info("선수 데이터 조회 완료: 경기 수 = {}", playerMatchData.size());
+
+        // 데이터 변환 및 필요한 경우 추가 처리
+        for (Map<String, Object> match : playerMatchData) {
+            // 날짜 포맷 변환 예시
+            if (match.containsKey("MATCH_DATE")) {
+                Object dateObj = match.get("MATCH_DATE");
+                if (dateObj != null) {
+                    // 필요시 날짜 포맷 변환 로직
+                    // match.put("MATCH_DATE_FORMATTED", formattedDate);
+                }
+            }
+
+            // 필요한 경우 등급이나 점수에 대한 레이블 추가
+            /*if (match.containsKey("RATING")) {
+                Double rating = Double.parseDouble(match.get("RATING").toString());
+                if (rating >= 8.0) {
+                    match.put("PERFORMANCE", "탁월함");
+                } else if (rating >= 7.0) {
+                    match.put("PERFORMANCE", "우수함");
+                } else if (rating >= 5.0) {
+                    match.put("PERFORMANCE", "평균");
+                } else {
+                    match.put("PERFORMANCE", "개선 필요");
+                }
+            }*/
+        }
+
+        return playerMatchData;
+    }
+
     @Override
     public List<Map<String, Object>> getPlayerAverageRatings() {
         logger.info("선수 평균치 조회 getPlayerAverageRatings");

@@ -68,4 +68,19 @@ public interface FootballManagementMapper {
      */
     int updatePlayerRating(Map<String, Object> ratingInfo);
 
+
+    /**
+     * 선수 ID 조회
+     * @param playerName 선수 이름
+     * @return 선수 ID 또는 null
+     */
+    String getPlayerId(String playerName);
+
+    /**
+     * 선수의 최근 5경기 데이터 조회
+     * @param playerId 선수 ID
+     * @return 최근 5경기 데이터 목록
+     */
+    List<Map<String, Object>> getPlayerData(String playerId);
+
 }

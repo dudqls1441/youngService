@@ -177,6 +177,15 @@
             font-weight: 600;
         }
 
+        .api-card-header {
+            color : white !important;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 500;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            text-align: left !important;
+        }
+
         .card-title {
             font-weight: 600;
             margin-bottom: 0;

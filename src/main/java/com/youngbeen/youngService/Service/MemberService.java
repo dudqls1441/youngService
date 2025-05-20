@@ -7,8 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
-import java.util.Optional;
-
 public interface MemberService {
 
     /**

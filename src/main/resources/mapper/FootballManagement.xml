@@ -273,4 +273,39 @@
         ORDER BY
             TOTAL_AVERAGE DESC, P.NAME
     </select>
+
+    <!-- 선수 ID 조회 -->
+    <select id="getPlayerId" parameterType="string" resultType="string">
+        SELECT player_ID
+        FROM players
+        WHERE name LIKE #{playerName}
+    </select>
+
+    <!-- 선수의 최근 5경기 데이터 조회 -->
+    <select id="getPlayerData" parameterType="string" resultType="map">
+        SELECT * FROM (
+            SELECT
+                P.PLAYER_ID,
+                P.NAME,
+                P.POSITION,
+                P.ACTIVE_STATUS,
+                PBR.RATING_ID,
+                PBR.ATTACK_SCORE,
+                PBR.DEFENSE_SCORE,
+                PBR.STAMINA_SCORE,
+                PBR.SPEED_SCORE,
+                PBR.TECHNIQUE_SCORE,
+                PBR.TEAMWORK_SCORE,
+                PBR.LAST_UPDATED,
+                PBR.SCHEDULE_ID,
+                PBR.PARTICIPATION_YN,
+                MS.MATCH_DATE
+            FROM PLAYERS P
+            LEFT JOIN PLAYERBASERATINGS PBR ON P.PLAYER_ID = PBR.PLAYER_ID
+            INNER JOIN MATCH_SCHEDULE MS ON PBR.SCHEDULE_ID = MS.SCHEDULE_ID
+            WHERE P.PLAYER_ID = #{playerId}
+                AND   PBR.PARTICIPATION_YN = 'Y'
+            ORDER BY MS.MATCH_DATE DESC
+        ) WHERE ROWNUM &lt; 5
+    </select>
 </mapper>

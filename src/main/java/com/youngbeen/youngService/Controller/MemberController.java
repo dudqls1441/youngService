@@ -284,6 +284,7 @@ public class MemberController {
             // 세션에 로그인 회원 정보 저장
             session.setAttribute("loginMember", loginMember);
             session.setAttribute("loginId", loginMember.getId());
+            session.setAttribute("userRole", loginMember.getRole());
             session.setAttribute("loginUserName", loginMember.getUsername());
             session.setAttribute("loginUserEmail", loginMember.getEmail());
 

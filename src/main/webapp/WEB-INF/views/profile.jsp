@@ -232,7 +232,7 @@
               <div class="row">
                 <!-- 프로필 사진 영역 -->
                 <div class="col-md-3 text-center mb-4 mb-md-0">
-                  <img src="${memberDetail.profileImage != null ? memberDetail.profileImage.replace('/resources/static', '') : '/profile/default_profile.png'}"
+                    <img src="${pageContext.request.contextPath}${memberDetail.profileImage != null ? memberDetail.profileImage.replace('/resources/static', '') : '/profile/default_profile.png'}"
                          alt="프로필 사진" class="profile-picture" id="profileImagePreview">
                   <div class="mb-3">
                     <label for="profileImage" class="btn btn-outline-primary btn-sm profile-upload-btn">

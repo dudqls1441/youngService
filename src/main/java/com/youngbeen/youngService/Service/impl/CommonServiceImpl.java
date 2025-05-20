@@ -178,8 +178,7 @@ public class CommonServiceImpl implements CommonService {
     public String uploadProfileImage(MultipartFile file, String memberId) {
         try {
             // 파일 저장 경로 설정
-            String profileDir = uploadDir + "/profiles/" + memberId;
-            Path dirPath = Paths.get(profileDir);
+            Path dirPath = Paths.get(uploadDir);
 
             if (!Files.exists(dirPath)) {
                 Files.createDirectories(dirPath);
@@ -202,11 +201,9 @@ public class CommonServiceImpl implements CommonService {
             String newFileName = UUID.randomUUID().toString() + fileExtension;
 
             // 파일 저장
-            Path filePath = Paths.get(profileDir + "/" + newFileName);
+            Path filePath = Paths.get(uploadDir + "/" + newFileName);
             Files.copy(file.getInputStream(), filePath);
 
-            // 상대 경로 반환 (웹에서 접근 가능한 URL)
-            //return "/resources/profiles/" + memberId + "/" + newFileName;
             return "/resources/static/profile/" + newFileName;
         } catch (IOException e) {
             throw new RuntimeException("파일 업로드 중 오류가 발생했습니다.", e);

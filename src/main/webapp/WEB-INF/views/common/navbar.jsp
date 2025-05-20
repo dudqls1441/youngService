@@ -20,6 +20,13 @@
                         <span class="notification-badge">${notificationCount}</span>
                     </a>
                 </li>
+                <c:if test="${sessionScope.userRole eq 'ADMIN'}">
+                    <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/api-keys">
+                            <i class="fas fa-key me-1"></i>API KEY 관리
+                        </a>
+                    </li>
+                </c:if>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img src="${pageContext.request.contextPath}/api/placeholder/80/80" alt="Profile" class="profile-thumb me-2">
