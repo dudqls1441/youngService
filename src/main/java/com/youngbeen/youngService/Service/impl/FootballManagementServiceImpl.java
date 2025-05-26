@@ -150,6 +150,13 @@ public class FootballManagementServiceImpl implements FootballManagementService 
     }
 
     @Override
+    public Long getPlayerIdByName(String name) {
+
+        Long result = Long.valueOf(fmMapper.getPlayerId(name));
+        return result;
+    }
+
+    @Override
     public List<Map> getMatchSchedules() {
         List<Map> result = fmMapper.getMatchSchedules();
         return result;

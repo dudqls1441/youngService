@@ -54,4 +54,6 @@ public interface FootballManagementService {
     Map<String, Object> balanceTeamsWithML(Map<String, Object> requestMap);
 
     List<Map<String, Object>> getPreviousWeekRatings(Integer scheduleId);
+
+    Long getPlayerIdByName(String name);
 }
