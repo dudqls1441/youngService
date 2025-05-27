@@ -4,6 +4,7 @@ import com.youngbeen.youngService.DTO.SubwayInfoDTO;
 import com.youngbeen.youngService.Service.SubwayService;
 import com.youngbeen.youngService.Service.impl.SubwayServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.locationtech.proj4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,12 +82,19 @@ public class SubwayPageController {
 
     @GetMapping("/favorites")
     @ResponseBody
-    public Map<String, Object> getFavoriteList() {
+    public Map<String, Object> getFavoriteList(HttpSession session) {
         Map<String, Object> response = new HashMap<>();
+
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
+
+        // 주식 즐겨찾기 정보 가져오기
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("userId", userId);
 
         logger.debug("/api/arrivalInfo  getFavoriteList");
         try {
-            List<SubwayInfoDTO> resultList = subwayService.selectBookmark();
+            List<SubwayInfoDTO> resultList = subwayService.selectBookmark(requestMap);
 
             logger.debug("resultList::{}",resultList);
             response.put("success", true);
@@ -144,12 +152,17 @@ public class SubwayPageController {
     public Map<String, Object> toggleBookmark(@RequestParam String line,
                                               @RequestParam String station,
                                               @RequestParam String updnLine,
-                                              @RequestParam String action) {
+                                              @RequestParam String action,
+                                              HttpSession session  ) {
+
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
+
         Map<String, Object> response = new HashMap<>();
         response.put("subwayId", line);
         response.put("statnId", station);
         response.put("updnLine", updnLine);
-        response.put("userId", "youngbeen");  // 임시 사용자 ID
+        response.put("userId", userId);  // 임시 사용자 ID
 
         try {
             boolean isBookmarked = subwayServiceImpl.checkBookmark(response);

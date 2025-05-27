@@ -3,6 +3,7 @@ package com.youngbeen.youngService.DTO;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public class MemberDetailDTO {
     private String university;
     private String universityStatus;
     private String major;
-    private Double gpa;
+    private BigDecimal gpa;
     private Integer universityEntranceYear;
     private Integer universityGraduationYear;
     private List<CertificateDTO> certificates = new ArrayList<>();

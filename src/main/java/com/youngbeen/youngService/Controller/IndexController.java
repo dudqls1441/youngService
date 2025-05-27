@@ -75,8 +75,9 @@ public class IndexController {
 
         Map<String, Object> response = new HashMap<>();
 
-        List<SubwayInfoDTO> subwayList = subwayService.selectBookmark();
+        List<SubwayInfoDTO> subwayList = subwayService.selectBookmark(requestMap);
         logger.debug("resultList::{}",subwayList);
+        logger.debug("weather::{}",weather);
 
         // 모델에 데이터 추가
         model.addAttribute("stockList", favoriteStocks);

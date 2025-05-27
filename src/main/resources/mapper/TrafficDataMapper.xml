@@ -9,30 +9,29 @@
         SELECT * FROM traffic_volume
     </select>
 
-
-
-    <select id="getSelectHqCode" parameterType="String" resultType="String">
+    <!-- MySQL: 여러 컬럼 반환을 위해 resultType을 Map으로 변경하거나 적절한 DTO 사용 -->
+    <select id="getSelectHqCode" parameterType="String" resultType="Map">
         SELECT
-            HQ_CODE,
-            HQ_NAME,
-            REGION_CODE,
-            HQ_ABBR_NAME
+        HQ_CODE,
+        HQ_NAME,
+        REGION_CODE,
+        HQ_ABBR_NAME
         FROM
-            TCS_HEADQUARTERS
+        TCS_HEADQUARTERS
         WHERE
-            HQ_NAME = #{hqName}
+        HQ_NAME = #{hqName}
     </select>
 
     <select id="getAnalyzedData" parameterType="String" resultType="com.youngbeen.youngService.DTO.TrafficDataDTO">
         SELECT
-            A.REGION_NAME     AS regionName,
-            A.TCS_NAME        AS tcsName,
-            A.TRAFFIC_AMOUNT  AS trafficAmount,
-            A.SUM_TM          AS sumTm,
-            A.CAR_TYPE        AS carType
+        A.REGION_NAME     AS regionName,
+        A.TCS_NAME        AS tcsName,
+        A.TRAFFIC_AMOUNT  AS trafficAmount,
+        A.SUM_TM          AS sumTm,
+        A.CAR_TYPE        AS carType
         FROM TRAFFIC_VOLUME A
         INNER JOIN TCS_HEADQUARTERS B
-            ON A.REGION_CODE = B.HQ_CODE
+        ON A.REGION_CODE = B.HQ_CODE
         WHERE A.REGION_CODE = #{RegionCode}
         ORDER BY CREATED_TIME, CAR_TYPE
     </select>

@@ -846,7 +846,6 @@
             clearInterval(refreshIntervalId);
         }
 
-        // 10초마다 데이터 갱신
         refreshIntervalId = setInterval(function() {
             // 검색 조건이 비어있지 않은 경우에만 갱신
             if (currentSearchParams.subwayId && currentSearchParams.statnId) {
@@ -856,7 +855,7 @@
                     currentSearchParams.updnLine
                 );
             }
-        }, 5000);
+        }, 50000);
     }
 
     // 자동 갱신 중지 함수

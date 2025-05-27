@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,8 +66,8 @@ public class MemberDetail {
     @Column(name = "MAJOR", length = 100)
     private String major;
 
-    @Column(name = "GPA", columnDefinition = "NUMBER(3,2)")
-    private Double gpa;
+    @Column(name = "GPA", columnDefinition = "DECIMAL(3,2)")
+    private BigDecimal gpa;
 
     @Column(name = "UNIVERSITY_ENTRANCE_YEAR")
     private Integer universityEntranceYear;

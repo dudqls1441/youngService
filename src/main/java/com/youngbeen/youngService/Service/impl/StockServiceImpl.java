@@ -222,8 +222,7 @@ public class StockServiceImpl implements StockService {
         logger.info("Flask API를 통한 주식 데이터 분석 시작");
 
         // Flask 서버 URL 설정
-        //String flaskApiUrl = "http://192.168.136.128:5000/analyze-stock1"; // 환경 설정으로 관리할 수 있음
-        String flaskApiUrl = "http://192.168.136.128:5000/analyze-stock2"; // 환경 설정으로 관리할 수 있음
+        String flaskApiUrl = "http://43.201.102.170:5000/analyze-stock2"; // 환경 설정으로 관리할 수 있음
 
         // HTTP 클라이언트 생성
         HttpClient client = HttpClient.newBuilder()

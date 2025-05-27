@@ -4,37 +4,42 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.youngbeen.youngService.Mapper.BookmarkMapper">
-<!--    &lt;!&ndash;TODO : 전체적으로 수정필요 &ndash;&gt;>-->
+    <!--    &lt;!&ndash;TODO : 전체적으로 수정필요 &ndash;&gt;-->
 
+    <!-- MySQL NOW() 및 DATE_FORMAT 사용 - 테이블명 대문자로 수정 -->
     <update id="updateBookmark" parameterType="Map">
-        INSERT INTO subway_bookmark (subwayId, statnId, updnLine, userId, createdAt)
-        VALUES (#{subwayId}, #{statnId}, #{updnLine}, #{userId}, TO_CHAR(SYSDATE, 'YYYY-MM-DD'))
+        INSERT INTO SUBWAY_BOOKMARK (SUBWAYID, STATNID, UPDNLINE, USERID, CREATEDAT)
+        VALUES (#{subwayId}, #{statnId}, #{updnLine}, #{userId}, DATE_FORMAT(NOW(), '%Y-%m-%d'))
     </update>
 
+    <!-- MySQL CONCAT 함수 사용 - 테이블명 대문자로 수정 -->
     <delete id="deleteBookmark" parameterType="Map">
-        DELETE FROM subway_bookmark
-        WHERE subwayId LIKE '%'  || #{subwayId}  || '%'
-        AND statnId LIKE '%'  || #{statnId}  || '%'
-        AND updnLine = #{updnLine}
-        AND userId = #{userId}
+        DELETE FROM SUBWAY_BOOKMARK
+        WHERE SUBWAYID LIKE CONCAT('%', #{subwayId}, '%')
+        AND STATNID LIKE CONCAT('%', #{statnId}, '%')
+        AND UPDNLINE = #{updnLine}
+        AND USERID = #{userId}
     </delete>
 
+    <!-- MySQL CONCAT 함수 사용 - 테이블명 일관성 유지 -->
     <select id="checkBookmark" parameterType="Map" resultType="boolean">
         SELECT COUNT(*) > 0
-        FROM subway_bookmark
-        WHERE subwayId LIKE '%'  || #{subwayId}  || '%'
-            AND statnId LIKE '%'  || #{statnId}  || '%'
-            AND updnLine = #{updnLine}
-            AND userId = #{userId}
+        FROM SUBWAY_BOOKMARK
+        WHERE SUBWAYID LIKE CONCAT('%', #{subwayId}, '%')
+        AND STATNID LIKE CONCAT('%', #{statnId}, '%')
+        AND UPDNLINE = #{updnLine}
+        AND USERID = #{userId}
     </select>
 
+    <!-- MySQL DATE_FORMAT 사용 - 테이블명 일관성 유지 -->
     <select id="selectBookmark" parameterType="Map" resultType="Map">
         SELECT
-            USERID,
-            SUBWAYID,
-            STATNID,
-            UPDNLINE,
-            TO_CHAR(CREATEDAT,'YYYY-MM-DD HH:mm:ss') AS CREATEDAT
+        USERID,
+        SUBWAYID,
+        STATNID,
+        UPDNLINE,
+        DATE_FORMAT(CREATEDAT,'%Y-%m-%d %H:%i:%s') AS CREATEDAT
         FROM SUBWAY_BOOKMARK
+        WHERE USERID = #{userId}
     </select>
 </mapper>

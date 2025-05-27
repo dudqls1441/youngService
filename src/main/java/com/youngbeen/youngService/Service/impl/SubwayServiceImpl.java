@@ -84,49 +84,6 @@ public class SubwayServiceImpl implements SubwayService {
         return result;
     }
 
-    public List<SubwayInfoDTO> getSubwayInfoFromPython(String subwayId, String statnId) {
-        List<SubwayInfoDTO> result = new ArrayList<>();
-
-        try {
-            String url = UriComponentsBuilder
-                    .fromHttpUrl("http://192.168.153.129:5001/subwayInfo")
-                    .queryParam("subwayId", subwayId)
-                    .queryParam("statnId", statnId)
-                    .toUriString();
-
-            logger.debug("ybyb 여기까지");
-            logger.debug("url " + url);
-
-            RestTemplate restTemplate = new RestTemplate();
-            String json = restTemplate.getForObject(url, String.class);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode arrayNode = mapper.readTree(json);
-
-            for (JsonNode node : arrayNode) {
-                SubwayInfoDTO info = new SubwayInfoDTO();
-                info.setSubwayId(node.get("subwayId").asText());
-                info.setStatnNm(node.get("statnNm").asText());
-                info.setUpdnLine(node.get("updnLine").asText());
-                info.setTrainLineNm(node.get("trainLineNm").asText());
-                info.setArvlMsg2(node.get("arvlMsg2").asText());
-                info.setArvlMsg3(node.get("arvlMsg3").asText());
-                info.setRecptnDt(node.get("recptnDt").asText());
-                info.setBarvlDt(node.get("barvlDt").asText());
-                info.setBstatnNm(node.get("bstatnNm").asText());
-                info.setLstcarAt(node.get("lstcarAt").asText());
-
-                result.add(info);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        logger.debug("result:::" + result);
-
-        return result;
-    }
 
     public Map<String, String> getStationLatLng(String stationName) {
         String apiKey = "4f6f49706164756437384c47775844";
@@ -224,11 +181,11 @@ public class SubwayServiceImpl implements SubwayService {
     }
 
     @Override
-    public List<SubwayInfoDTO> selectBookmark() {
+    public List<SubwayInfoDTO> selectBookmark(Map map) {
         List<SubwayInfoDTO> result = new ArrayList<>();
 
         Map<String,SubwayInfoDTO> info = new LinkedHashMap<>();
-        result = bookmarkMapper.selectBookmark();
+        result = bookmarkMapper.selectBookmark(map);
 
         return result;
     }

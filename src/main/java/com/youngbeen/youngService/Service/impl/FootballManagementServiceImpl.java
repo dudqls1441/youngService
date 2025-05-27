@@ -371,7 +371,7 @@ public class FootballManagementServiceImpl implements FootballManagementService 
         logger.info("Flask API를 통한 팀 밸런싱 처리 시작");
 
         // Flask 서버 URL 설정
-        String flaskApiUrl = "http://192.168.136.128:5000/football/team_balancing";
+        String flaskApiUrl = "http://43.201.102.170:5000/football/team_balancing";
 
         // HTTP 클라이언트 생성
         HttpClient client = HttpClient.newBuilder()
@@ -419,7 +419,7 @@ public class FootballManagementServiceImpl implements FootballManagementService 
         logger.info("Flask API를 통한 팀 시각화 처리 시작");
 
         // Flask 서버 URL 설정
-        String flaskApiUrl = "http://192.168.136.128:5000/football/team_visualization";
+        String flaskApiUrl = "http://43.201.102.170:5000/football/team_visualization";
 
         // HTTP 클라이언트 생성
         HttpClient client = HttpClient.newBuilder()

@@ -14,6 +14,16 @@ java {
 	}
 }
 
+// WAR 명시적 설정 추가
+war {
+	enabled = true
+	archiveFileName = 'ROOT.war'  // 직접 ROOT.war로 생성
+}
+
+jar {
+	enabled = false  // JAR 비활성화 (WAR만 생성)
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -39,8 +49,11 @@ dependencies {
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 
 	// Oracle JDBC 관련 의존성
-	implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
-	implementation 'com.oracle.database.nls:orai18n:23.3.0.23.09'
+	//implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+	//implementation 'com.oracle.database.nls:orai18n:23.3.0.23.09'
+
+	// MySQL JDBC 관련 의존성
+	implementation 'mysql:mysql-connector-java:8.0.33'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok:1.18.30'
