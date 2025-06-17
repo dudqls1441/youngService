@@ -144,42 +144,42 @@
         WITH
         -- 기본 평가 점수(LAST_UPDATED와 SCHEDULE_ID가 NULL인 데이터)
         BASE_RATINGS AS (
-        SELECT
-        PLAYER_ID,
-        ATTACK_SCORE AS BASE_ATTACK,
-        DEFENSE_SCORE AS BASE_DEFENSE,
-        STAMINA_SCORE AS BASE_STAMINA,
-        SPEED_SCORE AS BASE_SPEED,
-        TECHNIQUE_SCORE AS BASE_TECHNIQUE,
-        TEAMWORK_SCORE AS BASE_TEAMWORK
-        FROM
-        PLAYERBASERATINGS
-        WHERE
-        LAST_UPDATED IS NULL
-        AND SCHEDULE_ID IS NULL
+            SELECT
+                PLAYER_ID,
+                ATTACK_SCORE AS BASE_ATTACK,
+                DEFENSE_SCORE AS BASE_DEFENSE,
+                STAMINA_SCORE AS BASE_STAMINA,
+                SPEED_SCORE AS BASE_SPEED,
+                TECHNIQUE_SCORE AS BASE_TECHNIQUE,
+                TEAMWORK_SCORE AS BASE_TEAMWORK
+            FROM
+                PLAYERBASERATINGS
+            WHERE
+                LAST_UPDATED IS NULL
+                AND SCHEDULE_ID IS NULL
         ),
 
         -- 최근 한 달간의 평가 점수 중 참여한 데이터(PARTICIPATION_YN = 'Y')의 평균
         RECENT_RATINGS AS (
-        SELECT
-        PLAYER_ID,
-        AVG(ATTACK_SCORE) AS AVG_ATTACK,
-        AVG(DEFENSE_SCORE) AS AVG_DEFENSE,
-        AVG(STAMINA_SCORE) AS AVG_STAMINA,
-        AVG(SPEED_SCORE) AS AVG_SPEED,
-        AVG(TECHNIQUE_SCORE) AS AVG_TECHNIQUE,
-        AVG(TEAMWORK_SCORE) AS AVG_TEAMWORK,
-        COUNT(*) AS PARTICIPATION_COUNT
-        FROM
-        PLAYERBASERATINGS
-        WHERE
-        LAST_UPDATED >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-        AND PARTICIPATION_YN = 'Y'
-        AND SCHEDULE_ID IS NOT NULL
-        GROUP BY
-        PLAYER_ID
-        HAVING
-        COUNT(*) > 0
+            SELECT
+                PLAYER_ID,
+                AVG(ATTACK_SCORE) AS AVG_ATTACK,
+                AVG(DEFENSE_SCORE) AS AVG_DEFENSE,
+                AVG(STAMINA_SCORE) AS AVG_STAMINA,
+                AVG(SPEED_SCORE) AS AVG_SPEED,
+                AVG(TECHNIQUE_SCORE) AS AVG_TECHNIQUE,
+                AVG(TEAMWORK_SCORE) AS AVG_TEAMWORK,
+                COUNT(*) AS PARTICIPATION_COUNT
+            FROM
+                PLAYERBASERATINGS
+            WHERE
+                LAST_UPDATED >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+                AND PARTICIPATION_YN = 'Y'
+                AND SCHEDULE_ID IS NOT NULL
+            GROUP BY
+                PLAYER_ID
+            HAVING
+                COUNT(*) > 0
         )
 
         -- 최종 결과: 기본 평가(가중치 5)와 최근 평가 평균(가중치 5)을 합산

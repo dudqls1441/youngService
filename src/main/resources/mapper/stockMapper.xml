@@ -301,48 +301,55 @@
     <!-- 주식 성과 비교 검색 결과 조회 - MySQL STR_TO_DATE 사용 -->
     <select id="selcetPerformance" parameterType="map" resultType="map">
         SELECT
-        SI.CORPNM AS COMPANY_NAME,
-        SI.SRTNCD AS STOCK_CODE,
-        SI.MRKTCTG AS MARKET_CATEGORY,
-        FIRST_DAY.BASDT AS START_DATE,
-        FIRST_DAY.CLPR AS START_PRICE,
-        LAST_DAY.BASDT AS END_DATE,
-        LAST_DAY.CLPR AS END_PRICE,
-        ROUND((LAST_DAY.CLPR - FIRST_DAY.CLPR) / FIRST_DAY.CLPR * 100, 2) AS PRICE_CHANGE_PCT
-        FROM
-        STOCK_INFO SI
-        JOIN
-        (SELECT
-        SP.ISINCD,
-        SP.BASDT,
-        SP.CLPR
-        FROM
-        STOCK_PRICE SP
-        WHERE
-        SP.BASDT = (SELECT MIN(BASDT) FROM STOCK_PRICE
-        WHERE ISINCD = SP.ISINCD
-        AND BASDT BETWEEN STR_TO_DATE(#{startDate}, '%Y-%m-%d') AND STR_TO_DATE(#{endDate}, '%Y-%m-%d'))
-        ) FIRST_DAY ON SI.ISINCD = FIRST_DAY.ISINCD
-        JOIN
-        (SELECT
-        SP.SRTNCD,
-        SP.BASDT,
-        SP.CLPR,
-        SP.ISINCD
-        FROM
-        STOCK_PRICE SP
-        WHERE
-        SP.BASDT = (SELECT MAX(BASDT) FROM STOCK_PRICE
-        WHERE ISINCD = SP.ISINCD
-        AND BASDT BETWEEN STR_TO_DATE(#{startDate}, '%Y-%m-%d') AND STR_TO_DATE(#{endDate}, '%Y-%m-%d'))
-        ) LAST_DAY ON SI.ISINCD = LAST_DAY.ISINCD
-        WHERE
-        1=1
+            SI.CORPNM AS COMPANY_NAME,
+            SI.SRTNCD AS STOCK_CODE,
+            SI.MRKTCTG AS MARKET_CATEGORY,
+            FIRST_DAY.BASDT AS START_DATE,
+            FIRST_DAY.CLPR AS START_PRICE,
+            LAST_DAY.BASDT AS END_DATE,
+            LAST_DAY.CLPR AS END_PRICE,
+            ROUND((LAST_DAY.CLPR - FIRST_DAY.CLPR) / FIRST_DAY.CLPR * 100, 2) AS PRICE_CHANGE_PCT
+        FROM STOCK_INFO SI
+        INNER JOIN (
+            -- 먼저 MIN/MAX 날짜를 구한 후
+            SELECT
+                sp1.ISINCD,
+                sp1.BASDT,
+                sp1.CLPR
+            FROM STOCK_PRICE sp1
+            INNER JOIN (
+                SELECT
+                    ISINCD,
+                    MIN(BASDT) as min_date
+                FROM STOCK_PRICE
+                WHERE BASDT BETWEEN STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+                    AND STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+                GROUP BY ISINCD
+                ) min_dates ON sp1.ISINCD = min_dates.ISINCD
+                            AND sp1.BASDT = min_dates.min_date
+            ) FIRST_DAY ON SI.ISINCD = FIRST_DAY.ISINCD
+        INNER JOIN (
+            SELECT
+                sp1.ISINCD,
+                sp1.BASDT,
+                sp1.CLPR
+            FROM STOCK_PRICE sp1
+            INNER JOIN (
+                SELECT
+                    ISINCD,
+                    MAX(BASDT) as max_date
+                FROM STOCK_PRICE
+                WHERE BASDT BETWEEN STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+                    AND STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+                GROUP BY ISINCD
+                ) max_dates ON sp1.ISINCD = max_dates.ISINCD
+                            AND sp1.BASDT = max_dates.max_date
+            ) LAST_DAY ON SI.ISINCD = LAST_DAY.ISINCD
+        WHERE 1=1
         <if test="marketType != null and marketType != 'ALL'">
             AND SI.MRKTCTG = #{marketType}
         </if>
-        ORDER BY
-        PRICE_CHANGE_PCT DESC
+        ORDER BY PRICE_CHANGE_PCT DESC
     </select>
 
     <select id="countByMarketType"  parameterType="String" resultType="Long">
@@ -369,5 +376,40 @@
         FAVORITE_ID = #{srtnCd}
         AND USER_ID = #{userId}
     </delete>
+
+    <!-- 🔥 모든 REMARKS를 NULL로 초기화 -->
+    <update id="resetAllRemarksToNull">
+        UPDATE STOCK_PRICE
+        SET REMARKS = NULL
+        WHERE REMARKS IS NOT NULL
+    </update>
+
+    <!-- 🔥 배치 단위로 REMARKS를 NULL로 초기화 (MySQL 기준) -->
+    <update id="resetRemarksBatch">
+        UPDATE STOCK_PRICE
+        SET REMARKS = NULL
+        WHERE REMARKS IS NOT NULL
+        LIMIT #{batchSize}
+    </update>
+
+    <!-- Oracle인 경우 ROWNUM 사용 -->
+    <update id="resetRemarksBatchOracle">
+        UPDATE STOCK_PRICE
+        SET REMARKS = NULL
+        WHERE ROWID IN (
+        SELECT ROWID
+        FROM STOCK_PRICE
+        WHERE REMARKS IS NOT NULL
+        AND ROWNUM &lt;= #{batchSize}
+        )
+    </update>
+
+    <!-- 더 정교한 배치 처리 (ID 기반) -->
+    <update id="resetRemarksBatchWithId">
+        UPDATE STOCK_PRICE
+        SET REMARKS = NULL
+        WHERE REMARKS IS NOT NULL
+        AND ID BETWEEN #{startId} AND #{endId}
+    </update>
 
 </mapper>

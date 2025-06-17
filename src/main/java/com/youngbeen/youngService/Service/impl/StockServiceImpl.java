@@ -16,16 +16,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.util.*;
 
 @Service
 public class StockServiceImpl implements StockService {
@@ -34,6 +26,7 @@ public class StockServiceImpl implements StockService {
     private String apiKey;
 
     private final StockInfoMapper stockInfoMapper;
+
 
     private static final Logger logger = LoggerFactory.getLogger(StockServiceImpl.class);
 

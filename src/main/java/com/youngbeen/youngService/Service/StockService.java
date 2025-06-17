@@ -70,4 +70,5 @@ public interface StockService {
 
 
     Map<String, Object> getPerformance(Map<String, Object> map);
+
 }
