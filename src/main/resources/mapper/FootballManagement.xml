@@ -56,6 +56,37 @@
         SCHEDULE_ID = #{scheduleId}
     </select>
 
+    <!-- 일정 정보 가져오기 -->
+    <select id="getScheduleIdByDate" parameterType="String" resultType="java.util.Map">
+        SELECT
+        SCHEDULE_ID,
+        MATCH_DATE,
+        STATUS,
+        NOTE
+        FROM
+        MATCH_SCHEDULE
+        WHERE
+        MATCH_DATE = #{matchDate}
+    </select>
+
+    <select id="findExistingPlayerRating" parameterType="Map" resultType="Map">
+        SELECT
+        RATING_ID,
+        PLAYER_ID,
+        SCHEDULE_ID,
+        ATTACK_SCORE,
+        DEFENSE_SCORE,
+        STAMINA_SCORE,
+        SPEED_SCORE,
+        TECHNIQUE_SCORE,
+        TEAMWORK_SCORE,
+        PARTICIPATION_YN
+        FROM PLAYERBASERATINGS
+        WHERE PLAYER_ID = #{playerId}
+        AND SCHEDULE_ID = #{scheduleId}
+        LIMIT 1
+    </select>
+
     <!-- 일정별 선수 목록 가져오기 -->
     <select id="getPlayersByScheduleId" parameterType="Integer" resultType="java.util.Map">
         SELECT DISTINCT
@@ -107,7 +138,7 @@
         #{speedScore},
         #{techniqueScore},
         #{teamworkScore},
-        STR_TO_DATE(REGEXP_REPLACE(#{matchDate}, '\\([^)]*\\)', ''), '%Y. %m. %d.'),
+        STR_TO_DATE(#{matchDate}, '%Y-%m-%d'),
         #{scheduleId},
         #{participationYn}
         )
@@ -124,7 +155,7 @@
         TECHNIQUE_SCORE = #{techniqueScore},
         TEAMWORK_SCORE = #{teamworkScore},
         PARTICIPATION_YN = #{participationYn},
-        LAST_UPDATED = STR_TO_DATE(REGEXP_REPLACE(#{matchDate}, '\\([^)]*\\)', ''), '%Y. %m. %d.')
+        LAST_UPDATED = STR_TO_DATE(#{matchDate}, '%Y-%m-%d')
         WHERE
         RATING_ID = #{ratingId}
     </update>

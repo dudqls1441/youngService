@@ -19,11 +19,6 @@ public interface StockInfoMapper {
     List<StockInfoDTO> findAll();
 
     /**
-     * 종목명이나 코드로 검색
-     */
-    List<StockInfoDTO> findByStockNameContainingIgnoreCaseOrStockCodeContainingIgnoreCase(String stockCode);
-
-    /**
      * 종목명이나 코드로 상세 검색
      */
     List<StockInfoDTO> searchStockDetails(Map map);

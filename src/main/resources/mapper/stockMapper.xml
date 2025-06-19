@@ -41,6 +41,7 @@
         STOCK_INFO SI
         LEFT OUTER JOIN USER_FAVORITE_STOCKS UFS
         ON SI.SRTNCD = UFS.FAVORITE_ID
+        and UFS.USER_ID = #{userId}
         ORDER BY SI.ITMSNM
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -75,23 +76,6 @@
         AND SP.BASDT = (SELECT MAX(BASDT) FROM STOCK_PRICE)
     </select>
 
-    <!-- MySQL CONCAT 함수 사용 -->
-    <select id="findByStockNameContainingIgnoreCaseOrStockCodeContainingIgnoreCase"  parameterType="String" resultType="Map">
-        SELECT
-        SRTNCD,
-        ISINCD,
-        MRKTCTG,
-        ITMSNM,
-        CRNO,
-        CORPNM,
-        BASDT
-        FROM
-        STOCK_INFO
-        WHERE
-        SRTNCD LIKE CONCAT('%', #{stockCode}, '%')
-        OR ITMSNM LIKE CONCAT('%', #{stockCode}, '%')
-    </select>
-
     <!-- 키워드로 검색된 주식 데이터 수 조회 -->
     <select id="countByKeyword" parameterType="String" resultType="long">
         SELECT COUNT(*)
@@ -119,6 +103,7 @@
         STOCK_INFO SI
         LEFT OUTER JOIN USER_FAVORITE_STOCKS UFS
         ON SI.SRTNCD = UFS.FAVORITE_ID
+        AND UFS.USER_ID=#{userId}
         WHERE
         SI.SRTNCD LIKE CONCAT('%', #{keyword}, '%')
         OR SI.ITMSNM LIKE CONCAT('%', #{keyword}, '%')

@@ -37,11 +37,18 @@ public class StockController {
     public String getAllStocks(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
+            HttpSession session,
             Model model) {
 
         logger.debug("/stock/list 요청 - 페이지: {}, 크기: {}", page, size);
 
-        Map<String, Object> resultMap = stockService.getAllStocksWithPaging(page, size);
+        Map<String, Object> requestMap = new HashMap<>();
+
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
+        requestMap.put("userId", userId);
+
+        Map<String, Object> resultMap = stockService.getAllStocksWithPaging(page, size, requestMap);
         List<StockInfoDTO> stockInfoList = (List<StockInfoDTO>) resultMap.get("results");
         long totalCount = (long) resultMap.get("totalCount");
 
@@ -75,21 +82,30 @@ public class StockController {
             @RequestParam("keyword") String keyword,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
+            HttpSession session,
             Model model) {
 
         logger.debug("/stock/search 요청 - 키워드: {}, 페이지: {}, 크기: {}", keyword, page, size);
 
 
         Map<String, Object> resultMap;
+
+        Map<String, Object> requestMap = new HashMap<>();
+
+        String userId = "";
+        userId = (String) session.getAttribute("loginId");
+        requestMap.put("userId", userId);
+
+
         long totalCount;
         if (keyword == null || keyword.isBlank()) {
             // 빈 검색이면 전체 목록 반환
-            resultMap = stockService.getAllStocksWithPaging(page, size);
+            resultMap = stockService.getAllStocksWithPaging(page, size,requestMap);
             List<StockInfoDTO> tmpResultMap = stockService.getAllStocks();
             totalCount = (long) tmpResultMap.size();
         } else {
             // 검색어로 페이징 처리된 결과 반환
-            resultMap = stockService.searchStocksWithPaging(keyword, page, size);
+            resultMap = stockService.searchStocksWithPaging(keyword, page, size,requestMap);
             totalCount = (long) resultMap.get("totalCount");
         }
 
@@ -113,40 +129,6 @@ public class StockController {
 
         return "stockinfo";
     }
-
-
-//    @GetMapping("/stock/search")
-//    public Object searchStocks(
-//            @RequestParam(value = "keyword", required = false) String keyword,
-//            @RequestParam(value = "page", defaultValue = "1") int page,
-//            @RequestParam(value = "size", defaultValue = "10") int size,
-//            HttpServletRequest request,
-//            Model model) {
-//
-//        // AJAX 요청인지 확인
-//        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
-//
-//        // 검색 로직 수행
-//        List<StockInfoDTO> stockInfoList = stockService.searchStocks(keyword, page, size);
-//        int totalPages = stockService.getTotalPages(keyword, size);
-//
-//        if (isAjax) {
-//            // AJAX 요청인 경우 JSON 응답
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("success", true);
-//            response.put("stockInfoList", stockInfoList);
-//            response.put("currentPage", page);
-//            response.put("totalPages", totalPages);
-//            return ResponseEntity.ok(response);
-//        } else {
-//            // 일반 요청인 경우 뷰 리턴
-//            model.addAttribute("stockInfoList", stockInfoList);
-//            model.addAttribute("currentPage", page);
-//            model.addAttribute("totalPages", totalPages);
-//            return "stock/search";
-//        }
-//    }
-
 
     /**
      * 종목 검색 결과를 처리하는 메소드

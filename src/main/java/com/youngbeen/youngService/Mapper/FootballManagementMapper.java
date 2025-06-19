@@ -22,9 +22,20 @@ public interface FootballManagementMapper {
 
 
     /**
-     * 스케줄 ID 가져오기
+     * 스케줄 Date 가져오기
      */
     Map getScheduleById(Integer scheduleId);
+
+    /**
+     * 스케줄 ID 가져오기
+     */
+    Map getScheduleIdByDate(String matchDate);
+
+
+    /**
+     * RatingID 찾기
+     */
+    Map<String, Object> findExistingPlayerRating(Map<String, Object> params);
 
 
     /**

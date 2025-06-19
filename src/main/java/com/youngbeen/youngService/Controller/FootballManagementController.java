@@ -1,19 +1,34 @@
 package com.youngbeen.youngService.Controller;
 
 import com.youngbeen.youngService.DTO.StockInfoDTO;
+import com.youngbeen.youngService.Service.ExcelService;
 import com.youngbeen.youngService.Service.FootballManagementService;
 import com.youngbeen.youngService.Service.StockService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/football")
@@ -24,6 +39,9 @@ public class FootballManagementController {
     private FootballManagementService fmService;
 
     private static final Logger logger = LoggerFactory.getLogger(FootballManagementController.class);
+
+    @Autowired
+    private ExcelService excelService; // 엑셀 처리 서비스
 
 
     @GetMapping("/matchSchedules")
@@ -392,6 +410,218 @@ public class FootballManagementController {
         }
 
         return teams;
+    }
+
+    @GetMapping("/downloadExcel")
+    public ResponseEntity<Resource> downloadExcel(
+            @RequestParam String scheduleId,
+            @RequestParam(required = false) String scheduleText) throws IOException {
+
+        logger.debug("downloadExcel START - scheduleId: {}, scheduleText: {}", scheduleId, scheduleText);
+
+        try {
+            // 1. 데이터 조회
+            Map<String, Object> params = new HashMap<>();
+            if (!"base".equals(scheduleId)) {
+                params.put("scheduleId", Integer.parseInt(scheduleId));
+            }
+            List<Map> playerData = fmService.getPlayers(params);
+
+            logger.debug("조회된 선수 데이터 수: {}", playerData.size());
+
+            if (playerData.isEmpty()) {
+                logger.warn("선수 데이터가 없습니다.");
+                return ResponseEntity.badRequest().build();
+            }
+
+            // 2. 엑셀 생성
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            try (Workbook workbook = new XSSFWorkbook()) {
+
+                // Sheet 이름 설정 (scheduleText가 있으면 사용, 없으면 기본값)
+                String sheetName = "선수평가";
+                if (scheduleText != null && !scheduleText.isEmpty()) {
+                    String cleanScheduleText = scheduleText.replaceAll("[^\\w\\s가-힣-]", "").trim();
+                    sheetName = "선수평가(" + cleanScheduleText + ")";
+                }
+                Sheet sheet = workbook.createSheet(sheetName);
+
+                // 첫 번째 행에 메타 정보 추가 (숨김 처리용)
+                Row metaRow = sheet.createRow(0);
+                metaRow.createCell(0).setCellValue("SCHEDULE_ID");
+                metaRow.createCell(1).setCellValue(scheduleId);
+
+                // 메타 정보 행 숨김 처리
+                //sheet.setRowHidden(0, true);
+                //sheet.setColumnHidden(0, true);
+                metaRow.setHeightInPoints(0);
+
+                // 헤더 생성 (2번째 행)
+                Row headerRow = sheet.createRow(1);
+                String[] headers = {"PLAYER_ID", "선수명", "포지션", "공격력", "수비력", "체력", "속도", "기술", "팀워크"};
+
+//헤더 스타일 적용
+                CellStyle headerStyle = workbook.createCellStyle();
+                headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                headerStyle.setBorderTop(BorderStyle.THIN);
+                headerStyle.setBorderBottom(BorderStyle.THIN);
+                headerStyle.setBorderLeft(BorderStyle.THIN);
+                headerStyle.setBorderRight(BorderStyle.THIN);
+
+                for (int i = 0; i < headers.length; i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(headers[i]);
+                    cell.setCellStyle(headerStyle);
+
+                    // PLAYER_ID 컬럼 숨김 처리
+                    if (i == 0) {
+                        sheet.setColumnHidden(0, true);
+                    }
+                }
+
+                // 컬럼 너비 설정 - 수정된 부분
+                int[] columnWidths = {3000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000};
+                for (int i = 0; i < columnWidths.length; i++) {  // 모든 컬럼에 적용
+                    sheet.setColumnWidth(i, columnWidths[i]);
+                }
+
+                // 데이터 생성 (3번째 행부터)
+                int rowNum = 2;
+                for (Map<String, Object> player : playerData) {
+                    Row row = sheet.createRow(rowNum++);
+
+                    try {
+                        row.createCell(0).setCellValue(getNumberValue(player, "PLAYER_ID")); // PLAYER_ID 추가
+                        row.createCell(1).setCellValue(getStringValue(player, "NAME"));
+                        row.createCell(2).setCellValue(getStringValue(player, "POSITION"));
+                        row.createCell(3).setCellValue(getNumberValue(player, "ATTACK_SCORE"));
+                        row.createCell(4).setCellValue(getNumberValue(player, "DEFENSE_SCORE"));
+                        row.createCell(5).setCellValue(getNumberValue(player, "STAMINA_SCORE"));
+                        row.createCell(6).setCellValue(getNumberValue(player, "SPEED_SCORE"));
+                        row.createCell(7).setCellValue(getNumberValue(player, "TECHNIQUE_SCORE"));
+                        row.createCell(8).setCellValue(getNumberValue(player, "TEAMWORK_SCORE"));
+                    } catch (Exception e) {
+                        logger.error("선수 데이터 처리 중 오류: {}, 선수 데이터: {}", e.getMessage(), player);
+                    }
+                }
+                logger.debug("데이터 행 생성 완료: {} 행", rowNum - 2);
+
+                // 컬럼 너비 자동 조정 (PLAYER_ID 제외)
+                for (int i = 1; i < headers.length; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                workbook.write(outputStream);
+                logger.debug("엑셀 파일 생성 완료: {} bytes", outputStream.size());
+            }
+
+            // 3. Resource 생성
+            ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .contentLength(resource.contentLength())
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("엑셀 다운로드 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+    @PostMapping("/uploadExcel")
+    public ResponseEntity<Map<String, Object>> uploadExcel(
+            @RequestParam("excelFile") MultipartFile excelFile,
+            @RequestParam("scheduleId") String scheduleId) {
+
+        logger.debug("uploadExcel start");
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 파일 유효성 검사
+            if (excelFile.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "파일이 선택되지 않았습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 파일 확장자 검사
+            String fileName = excelFile.getOriginalFilename();
+            if (fileName == null || (!fileName.toLowerCase().endsWith(".xlsx") && !fileName.toLowerCase().endsWith(".xls"))) {
+                response.put("success", false);
+                response.put("message", "엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 파일 크기 검사 (예: 10MB 제한)
+            if (excelFile.getSize() > 10 * 1024 * 1024) {
+                response.put("success", false);
+                response.put("message", "파일 크기는 10MB를 초과할 수 없습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            logger.info("Excel file upload started - File: {}, Size: {}, ScheduleId: {}",
+                    fileName, excelFile.getSize(), scheduleId);
+
+            // 엑셀 파일 파싱 및 데이터 추출
+            List<Map<String, Object>> excelData = excelService.parseExcelFile(excelFile);
+
+            // 데이터 유효성 검사
+            if (excelData.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "엑셀 파일에 유효한 데이터가 없습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 성공 응답
+            response.put("success", true);
+            response.put("message", "엑셀 파일이 성공적으로 처리되었습니다.");
+            response.put("data", excelData);
+            response.put("totalCount", excelData.size());
+
+            logger.info("Excel file processed successfully - Records: {}", excelData.size());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IOException e) {
+            logger.debug("Error reading excel file", e);
+            response.put("success", false);
+            response.put("message", "엑셀 파일을 읽는 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid excel format", e);
+            response.put("success", false);
+            response.put("message", "엑셀 파일 형식이 올바르지 않습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+
+        } catch (Exception e) {
+            logger.error("Unexpected error during excel upload", e);
+            response.put("success", false);
+            response.put("message", "파일 처리 중 예상치 못한 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    private String getStringValue(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        return value != null ? value.toString() : "";
+    }
+
+    private double getNumberValue(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (Exception e) {
+            logger.warn("숫자 변환 실패: {} = {}", key, value);
+            return 0.0;
+        }
     }
 
     /**

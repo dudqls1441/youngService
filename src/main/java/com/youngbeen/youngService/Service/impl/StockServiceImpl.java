@@ -67,7 +67,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public Map<String, Object> getAllStocksWithPaging(int page, int size) {
+    public Map<String, Object> getAllStocksWithPaging(int page, int size, Map<String,Object> requestMap) {
         logger.info("모든 주식 정보 페이징 조회: 페이지={}, 크기={}", page, size);
 
         Map<String, Object> result = new HashMap<>();
@@ -82,6 +82,8 @@ public class StockServiceImpl implements StockService {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("limit", size);
         paramMap.put("offset", offset);
+        paramMap.put("userId", requestMap.get("userId"));
+
 
         // 페이징된 데이터 조회
         List<StockInfoDTO> pagedResults = stockInfoMapper.findAllWithPaging(paramMap);
@@ -92,18 +94,9 @@ public class StockServiceImpl implements StockService {
         return result;
     }
 
-    @Override
-    public List<StockInfoDTO> searchStocks(String keyword) {
-        logger.info("키워드로 주식 검색: {}", keyword);
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return stockInfoMapper.findByStockNameContainingIgnoreCaseOrStockCodeContainingIgnoreCase(keyword.trim());
-    }
 
     @Override
-    public Map<String, Object> searchStocksWithPaging(String keyword, int page, int size) {
+    public Map<String, Object> searchStocksWithPaging(String keyword, int page, int size, Map<String,Object> map) {
         logger.info("키워드로 주식 페이징 검색: {}, 페이지={}, 크기={}", keyword, page, size);
 
         Map<String, Object> result = new HashMap<>();
@@ -125,6 +118,7 @@ public class StockServiceImpl implements StockService {
         paramMap.put("keyword", keyword.trim());
         paramMap.put("limit", size);
         paramMap.put("offset", offset);
+        paramMap.put("userId", map.get("userId"));
 
         // 페이징된 검색 결과 조회
         List<StockInfoDTO> pagedResults = stockInfoMapper.findByKeywordWithPaging(paramMap);

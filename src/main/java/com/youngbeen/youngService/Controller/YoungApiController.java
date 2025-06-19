@@ -2,6 +2,7 @@ package com.youngbeen.youngService.Controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.youngbeen.youngService.DTO.ApiResponse;
+import com.youngbeen.youngService.Entity.ApiKey;
 import com.youngbeen.youngService.Service.ApiKeyService;
 import com.youngbeen.youngService.Service.FootballManagementService;
 import com.youngbeen.youngService.Service.impl.FootballManagementServiceImpl;
@@ -68,6 +69,28 @@ public class YoungApiController {
 
         try {
             logger.info("컨트롤러 메서드 진입: getPlayerData - apiKey: {}, playerName: {}", apiKey, playerName);
+
+            // ApiServiceImpl의 검증 메서드 사용
+            if (!apiKeyService.isValidApiKey(apiKey)) {
+                logger.warn("유효하지 않은 API 키: apiKey={}", apiKey);
+
+                Map<String, Object> result = new HashMap<>();
+                Map<String, Object> header = new HashMap<>();
+
+                header.put("resultCode", "E401");
+                header.put("resultMessage", "유효하지 않은 API 키입니다");
+                header.put("successYN", "N");
+
+                result.put("header", header);
+                result.put("body", null);
+
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(result);
+            }
+
+            // API 키 사용 기록 업데이트
+            apiKeyService.updateApiKeyUsage(apiKey, "/api/v1/player-data");
 
             // 1. 헤더 설정
             HttpHeaders headers = new HttpHeaders();
@@ -181,11 +204,39 @@ public class YoungApiController {
                     content = @Content(schema = @Schema(implementation = com.youngbeen.youngService.DTO.ApiResponse.class))
             )
     })
+
     @PostMapping("/player-ratings")
     public ResponseEntity<Map<String, Object>> savePlayerRatings(
             @RequestParam String apiKey,
             @RequestBody Map<String, Object> request) {
+
+        logger.debug("savePlayerRatings: apiKey={}, request ={}", apiKey, request);
         try {
+            // ApiServiceImpl의 검증 메서드 사용
+            if (!apiKeyService.isValidApiKey(apiKey)) {
+                logger.warn("유효하지 않은 API 키: apiKey={}", apiKey);
+
+                Map<String, Object> result = new HashMap<>();
+                Map<String, Object> header = new HashMap<>();
+
+                header.put("resultCode", "E401");
+                header.put("resultMessage", "유효하지 않은 API 키입니다");
+                header.put("successYN", "N");
+
+                result.put("header", header);
+                result.put("body", null);
+
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(result);
+            }
+
+            // API 키 사용 기록 업데이트
+            apiKeyService.updateApiKeyUsage(apiKey, "/api/v1/player-data");
+
+
+
+
             // 1. 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.add("X-API-Version", "1.0");
@@ -236,10 +287,10 @@ public class YoungApiController {
             }
 
             // 내부 형식으로 선수 평가 데이터 변환
-            List<Map<String, Object>> playerRatings = convertPlayerRatings(externalPlayerRatings);
+            //List<Map<String, Object>> playerRatings = convertPlayerRatings(externalPlayerRatings);
 
             // 서비스 호출: 기존 메소드 사용
-            int savedCount = footballManagementService.saveAllPlayerRatings(scheduleInfo, playerRatings);
+            int savedCount = footballManagementService.saveAllPlayerRatings(scheduleInfo, externalPlayerRatings);
 
             // 응답 데이터 구성
             Map<String, Object> result = new HashMap<>();
@@ -252,7 +303,7 @@ public class YoungApiController {
             header.put("successYN", "Y");
 
             // 바디 정보
-            body.put("totalCount", playerRatings.size());
+            body.put("totalCount", externalPlayerRatings.size());
             body.put("savedCount", savedCount);
             body.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 
@@ -319,6 +370,66 @@ public class YoungApiController {
                     .body(result);
         }
     }
+    /**
+     * POSTMAN TEST VALUE
+
+     http://localhost:8080/api/v1/player-ratings?apiKey=75fe0d060e3d4c3c81674f38372cd6b7
+
+
+     1. 단건
+    {
+        "scheduleInfo": {
+        "scheduleId": 25,
+                "scheduleDate": "2025-06-20"
+    },
+        "playerRatings": [
+        {
+            "PLAYER_ID": 1,
+                "ATTACK_SCORE": 8,
+                "DEFENSE_SCORE": 7,
+                "STAMINA_SCORE": 9,
+                "SPEED_SCORE": 6,
+                "TECHNIQUE_SCORE": 8,
+                "TEAMWORK_SCORE": 9,
+                "PARTICIPATION_YN": "Y"
+        }
+  ]
+    }
+
+
+
+
+     2. 다건
+     {
+     "scheduleInfo": {
+     "scheduleId": 25,
+     "scheduleDate": "2025-06-20"
+     },
+     "playerRatings": [
+     {
+     "PLAYER_ID": 1,
+     "ATTACK_SCORE": 8,
+     "DEFENSE_SCORE": 7,
+     "STAMINA_SCORE": 9,
+     "SPEED_SCORE": 6,
+     "TECHNIQUE_SCORE": 8,
+     "TEAMWORK_SCORE": 9,
+     "PARTICIPATION_YN": "Y"
+     },
+     {
+     "PLAYER_ID": 2,
+     "ATTACK_SCORE": 6,
+     "DEFENSE_SCORE": 8,
+     "STAMINA_SCORE": 7,
+     "SPEED_SCORE": 9,
+     "TECHNIQUE_SCORE": 5,
+     "TEAMWORK_SCORE": 7,
+     "PARTICIPATION_YN": "Y"
+     }
+     ]
+     }
+
+     */
 
     /**
      * 선수 평가 데이터 조회 API
@@ -330,6 +441,8 @@ public class YoungApiController {
             @RequestParam(required = false, defaultValue = "false") boolean base) {
 
         try {
+
+
             Map<String, Object> params = new HashMap<>();
             if (base) {
                 params.put("isBaseRating", true);
@@ -380,18 +493,18 @@ public class YoungApiController {
 
             // 선수 ID 처리
             // 1. 외부 요청에 선수 ID가 있는 경우
-            if (externalRating.containsKey("playerId")) {
-                internalRating.put("PLAYER_ID", externalRating.get("playerId"));
+            if (externalRating.containsKey("PLAYER_ID")) {
+                internalRating.put("PLAYER_ID", externalRating.get("PLAYER_ID"));
             }
             // 2. 선수 이름으로 ID 조회 (이름만 있는 경우)
-            else if (externalRating.containsKey("playerName")) {
+            else if (externalRating.containsKey("NAME")) {
                 // 선수 이름으로 ID를 조회하는 로직
-                Long playerId = findPlayerIdByName(externalRating.get("playerName").toString());
+                Long playerId = findPlayerIdByName(externalRating.get("NAME").toString());
 
                 if (playerId != null) {
                     internalRating.put("PLAYER_ID", playerId);
                 } else {
-                    logger.warn("선수를 찾을 수 없음: {}", externalRating.get("playerName"));
+                    logger.warn("선수를 찾을 수 없음: {}", externalRating.get("NAME"));
                     continue; // 선수를 찾을 수 없으면 건너뜀
                 }
             } else {

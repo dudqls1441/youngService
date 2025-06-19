@@ -15,13 +15,6 @@ public interface StockService {
     List<StockInfoDTO> getAllStocks();
 
     /**
-     * 키워드로 주식을 검색
-     * @param keyword 검색어(종목명 또는 코드)
-     * @return 검색 결과 목록
-     */
-    List<StockInfoDTO> searchStocks(String keyword);
-
-    /**
      * 주식 상세 검색
      * @param map 검색어(종목명 또는 코드)
      * @return 검색 결과 목록
@@ -63,8 +56,8 @@ public interface StockService {
     MarketSummary getMarketSummary();
 
 
-    Map<String, Object> getAllStocksWithPaging(int page, int size);
-    Map<String, Object> searchStocksWithPaging(String keyword, int page, int size);
+    Map<String, Object> getAllStocksWithPaging(int page, int size, Map<String, Object> map);
+    Map<String, Object> searchStocksWithPaging(String keyword, int page, int size, Map<String, Object> map);
     Map<String, Object> searchStockDetailsWithPaging(Map<String, Object> map);
     Map<String, Object> analyzeStockData(Map<String, Object> map);
 

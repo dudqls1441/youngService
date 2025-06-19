@@ -243,11 +243,17 @@ public class FootballManagementServiceImpl implements FootballManagementService 
         Long scheduleId = null;
         String matchDate = "";
         if (scheduleIdObj != null) {
-            matchDate = (String) scheduleInfo.get("scheduleText");
+            matchDate = (String) scheduleInfo.get("scheduleDate");
             if (scheduleIdObj instanceof Integer) {
                 scheduleId = ((Integer) scheduleIdObj).longValue();
             } else if (scheduleIdObj instanceof Long) {
                 scheduleId = (Long) scheduleIdObj;
+            }
+        }else{
+            matchDate = (String) scheduleInfo.get("scheduleDate");
+            if(matchDate != null) {
+                Map<String,Object> tmpResultMap = fmMapper.getScheduleIdByDate(matchDate);
+                scheduleId = (Long) tmpResultMap.get("SCHEDULE_ID");
             }
         }
 
@@ -269,6 +275,38 @@ public class FootballManagementServiceImpl implements FootballManagementService 
                     ratingId = ((Integer) playerRating.get("RATING_ID")).longValue();
                 } else if (playerRating.get("RATING_ID") instanceof Long) {
                     ratingId = (Long) playerRating.get("RATING_ID");
+                }
+            }
+
+            // === 추가된 로직: API에서 ratingId가 없으면 DB에서 조회 ===
+            if (ratingId == null && playerId != null && scheduleId != null) {
+                logger.debug("ratingId가 없어서 DB에서 기존 평가 데이터 조회 - playerId: {}, scheduleId: {}", playerId, scheduleId);
+
+                try {
+                    // 기존 평가 데이터 조회용 파라미터 구성
+                    Map<String, Object> searchParams = new HashMap<>();
+                    searchParams.put("playerId", playerId);
+                    searchParams.put("scheduleId", scheduleId);
+
+                    // DB에서 기존 평가 데이터 조회
+                    Map<String, Object> existingRating = fmMapper.findExistingPlayerRating(searchParams);
+
+                    if (existingRating != null) {
+                        // 기존 데이터가 있으면 ratingId 추출
+                        Object existingRatingId = existingRating.get("RATING_ID");
+                        if (existingRatingId instanceof Integer) {
+                            ratingId = ((Integer) existingRatingId).longValue();
+                        } else if (existingRatingId instanceof Long) {
+                            ratingId = (Long) existingRatingId;
+                        }
+                        logger.debug("기존 평가 데이터 발견 - ratingId: {}", ratingId);
+                    } else {
+                        logger.debug("기존 평가 데이터 없음 - 새로 생성 예정");
+                    }
+
+                } catch (Exception e) {
+                    logger.warn("기존 평가 데이터 조회 중 오류 발생 - playerId: {}, scheduleId: {}", playerId, scheduleId, e);
+                    // 오류 발생 시 ratingId는 null로 유지 (새로 생성)
                 }
             }
 

@@ -314,6 +314,42 @@
                     <button id="btnCopyPrevWeekRatings" class="btn btn-info ms-2">
                         <i class="fas fa-copy"></i> 지난주 데이터 불러오기
                       </button>
+
+
+                      <button id="btnExcelDownload" class="btn btn-outline-success ms-2">
+                          <i class="fas fa-file-excel"></i> 엑셀 다운로드
+                        </button>
+                        <button id="btnExcelUpload" class="btn btn-outline-primary ms-2">
+                          <i class="fas fa-file-upload"></i> 엑셀 업로드
+                        </button>
+                  </div>
+                </div>
+
+                <!-- 엑셀 업로드용 숨겨진 파일 입력 필드 -->
+                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
+
+                <!-- 엑셀 업로드 확인 모달 -->
+                <div class="modal fade" id="excelUploadModal" tabindex="-1" aria-labelledby="excelUploadModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="excelUploadModalLabel">엑셀 업로드 확인</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="alert alert-info">
+                          <i class="fas fa-info-circle me-2"></i>
+                          업로드된 엑셀 파일의 데이터를 확인하고 저장하시겠습니까?
+                        </div>
+                        <div id="excelPreviewTable" class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                          <!-- 엑셀 데이터 미리보기 테이블이 여기에 표시됩니다 -->
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirmExcelUpload">확인 및 저장</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -588,6 +624,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 지난주 데이터 불러오기 버튼 이벤트 리스너 추가
     document.getElementById('btnCopyPrevWeekRatings').addEventListener('click', loadPreviousWeekRatings);
+
+
+    //엑셀 관련
+    document.getElementById('btnExcelDownload').addEventListener('click', downloadExcel);
+    document.getElementById('btnExcelUpload').addEventListener('click', function() {
+        document.getElementById('excelFileInput').click();
+    });
+    document.getElementById('excelFileInput').addEventListener('change', handleExcelUpload);
+    document.getElementById('btnConfirmExcelUpload').addEventListener('click', confirmExcelUpload);
 });
 
 // 페이지 로드 시 경기 일정 데이터 가져오기
@@ -1038,6 +1083,12 @@ function saveAllRatings() {
     const scheduleId = document.getElementById('matchSchedule').value;
     const scheduleText = document.getElementById('matchSchedule').options[document.getElementById('matchSchedule').selectedIndex].text;
 
+    // 날짜만 추출하여 표준 형식으로 변환
+    const scheduleDate = extractAndConvertDate(scheduleText);
+
+    console.log('Schedule ID:', scheduleId);
+    console.log('Original Schedule Text:', scheduleText);
+    console.log('Converted Schedule Date:', scheduleDate);
 
     rows.forEach(row => {
         if (row.dataset.player) {
@@ -1058,7 +1109,7 @@ function saveAllRatings() {
     const saveData = {
         scheduleInfo: {
             scheduleId: scheduleId === 'base' ? null : parseInt(scheduleId),
-            scheduleText: scheduleText
+            scheduleDate :  scheduleDate
         },
         playerRatings: playerRatings
     };
@@ -1097,6 +1148,30 @@ function deletePlayer(playerId) {
             alert('선수 삭제 중 오류가 발생했습니다.');
         });
 }
+
+function extractAndConvertDate(scheduleText) {
+    try {
+        // 정규식으로 날짜 부분 추출: YYYY. MM. DD. 형식
+        const dateMatch = scheduleText.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\./);
+
+        if (dateMatch) {
+            const year = dateMatch[1];
+            const month = dateMatch[2].padStart(2, '0');  // 1자리 월을 2자리로
+            const day = dateMatch[3].padStart(2, '0');    // 1자리 일을 2자리로
+
+            return `${year}-${month}-${day}`;
+        }
+
+        // 날짜 형식을 찾을 수 없는 경우
+        console.warn('날짜 형식을 찾을 수 없습니다:', scheduleText);
+        return null;
+
+    } catch (error) {
+        console.error('날짜 변환 중 오류:', error);
+        return null;
+    }
+}
+
 
 // 팀 구성 실행
 function createTeams() {
@@ -1260,6 +1335,245 @@ function getPositionBadgeClass(position) {
         case 'GK': return 'bg-success position-gk';
         default: return 'bg-secondary';
     }
+}
+
+
+// 엑셀 다운로드 함수
+function downloadExcel() {
+    console.log("downloadExcel() start");
+    const scheduleId = document.getElementById('matchSchedule').value;
+    const scheduleText = document.getElementById('matchSchedule').options[document.getElementById('matchSchedule').selectedIndex].text;
+    const convertedScheduleText = convertToDateFormat(scheduleText);
+
+    console.log("convertedScheduleText::",convertedScheduleText);
+
+    // 데이터 확인 (기존 코드)
+    const tableRows = document.querySelectorAll('#playerRatingsTable tbody tr');
+    if (tableRows.length === 0 || tableRows[0].querySelector('td').textContent.includes('데이터')) {
+        alert('다운로드할 데이터가 없습니다. 먼저 조회 버튼을 클릭하여 데이터를 불러와주세요.');
+        return;
+    }
+
+    // 로딩 표시 (기존 코드)
+    const originalText = document.getElementById('btnExcelDownload').innerHTML;
+    document.getElementById('btnExcelDownload').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 다운로드 중...';
+    document.getElementById('btnExcelDownload').disabled = true;
+
+    const downloadUrl = '/football/downloadExcel?scheduleId=' + scheduleId + '&scheduleText=' + encodeURIComponent(convertedScheduleText);
+
+    fetch(downloadUrl)
+        .then(response => {
+            if (!response.ok) throw new Error('다운로드 요청 실패');
+            return response.blob();
+        })
+        // blob : 바이너리 데이터를 담는 컨테이너(파일의 내용물을 메모리에 담아둠)
+        .then(blob => {
+            console.log("blob ::" , blob);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+
+            // 파일명 생성 (JavaScript에서 확실하게 설정)
+            const cleanFileName = convertedScheduleText.replace(/[^\w\s가-힣-]/g, '').trim();
+            const finalFileName = '그린FC_평가_' + (cleanFileName || 'data') + '.xlsx';
+            link.download = finalFileName;
+
+            console.log('Download filename:', finalFileName);
+
+            document.body.appendChild(link);
+            link.click(); // 받는 사람에게 전달
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            console.log('파일 다운로드 완료');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('엑셀 다운로드 중 오류가 발생했습니다.');
+        })
+        .finally(() => {
+            document.getElementById('btnExcelDownload').innerHTML = originalText;
+            document.getElementById('btnExcelDownload').disabled = false;
+        });
+}
+
+// 엑셀 업로드 처리
+function handleExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log("file ::" , file);
+
+    // 파일 확장자 확인
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
+        return;
+    }
+
+    // FormData 생성
+    const formData = new FormData();
+    formData.append('excelFile', file);
+
+    const scheduleId = document.getElementById('matchSchedule').value;
+    formData.append('scheduleId', scheduleId);
+
+    // 로딩 표시
+    const originalText = document.getElementById('btnExcelUpload').innerHTML;
+    document.getElementById('btnExcelUpload').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 업로드 중...';
+    document.getElementById('btnExcelUpload').disabled = true;
+
+    // 서버로 파일 업로드 및 데이터 파싱
+    fetch('/football/uploadExcel', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 미리보기 데이터 표시
+            showExcelPreview(data.data);
+        } else {
+            alert('엑셀 파일 처리 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('엑셀 업로드 중 오류가 발생했습니다.');
+    })
+    .finally(() => {
+        // 버튼 원상복구
+        document.getElementById('btnExcelUpload').innerHTML = originalText;
+        document.getElementById('btnExcelUpload').disabled = false;
+        // 파일 입력 초기화
+        event.target.value = '';
+    });
+}
+
+// 엑셀 데이터 미리보기 표시
+function showExcelPreview(data) {
+    const previewContainer = document.getElementById('excelPreviewTable');
+
+    if (!data || data.length === 0) {
+        previewContainer.innerHTML = '<div class="alert alert-warning">업로드된 파일에 데이터가 없습니다.</div>';
+        return;
+    }
+
+    // 테이블 생성
+    let tableHtml = `
+        <table class="table table-sm table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>선수명</th>
+                    <th>포지션</th>
+                    <th>공격력</th>
+                    <th>수비력</th>
+                    <th>체력</th>
+                    <th>속도</th>
+                    <th>기술</th>
+                    <th>팀워크</th>
+                    <th>평균</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    data.forEach(player => {
+        const avgScore = ((player.ATTACK_SCORE + player.DEFENSE_SCORE + player.STAMINA_SCORE +
+                          player.SPEED_SCORE + player.TECHNIQUE_SCORE + player.TEAMWORK_SCORE) / 6).toFixed(1);
+
+        tableHtml += `
+            <tr>
+                <td>${player.NAME}</td>
+                <td>${player.POSITION}</td>
+                <td>${player.ATTACK_SCORE}</td>
+                <td>${player.DEFENSE_SCORE}</td>
+                <td>${player.STAMINA_SCORE}</td>
+                <td>${player.SPEED_SCORE}</td>
+                <td>${player.TECHNIQUE_SCORE}</td>
+                <td>${player.TEAMWORK_SCORE}</td>
+                <td><strong>${avgScore}</strong></td>
+            </tr>
+        `;
+    });
+
+    tableHtml += '</tbody></table>';
+    previewContainer.innerHTML = tableHtml;
+
+    // 미리보기 데이터를 전역 변수에 저장 (확인 버튼에서 사용)
+    window.excelUploadData = data;
+
+    // 모달 표시
+    const modal = new bootstrap.Modal(document.getElementById('excelUploadModal'));
+    modal.show();
+}
+
+// 엑셀 업로드 확인 및 저장
+function confirmExcelUpload() {
+    if (!window.excelUploadData || window.excelUploadData.length === 0) {
+        alert('저장할 데이터가 없습니다.');
+        return;
+    }
+
+    const scheduleId = document.getElementById('matchSchedule').value;
+    const scheduleText = document.getElementById('matchSchedule').options[document.getElementById('matchSchedule').selectedIndex].text;
+    const scheduleDate = extractAndConvertDate(scheduleText);
+
+    const saveData = {
+        scheduleInfo: {
+            scheduleId: scheduleId === 'base' ? null : parseInt(scheduleId),
+            scheduleDate: scheduleDate
+        },
+        playerRatings: window.excelUploadData.map(player => ({
+            PLAYER_ID: player.PLAYER_ID,
+            RATING_ID: player.RATING_ID || null,
+            ATTACK_SCORE: player.ATTACK_SCORE,
+            DEFENSE_SCORE: player.DEFENSE_SCORE,
+            STAMINA_SCORE: player.STAMINA_SCORE,
+            SPEED_SCORE: player.SPEED_SCORE,
+            TECHNIQUE_SCORE: player.TECHNIQUE_SCORE,
+            TEAMWORK_SCORE: player.TEAMWORK_SCORE,
+            PARTICIPATION_YN: player.PARTICIPATION_YN || 'Y'
+        }))
+    };
+
+    // 저장 요청
+    fetch('/football/saveAllRatings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('엑셀 데이터가 성공적으로 저장되었습니다.');
+            // 모달 닫기
+            bootstrap.Modal.getInstance(document.getElementById('excelUploadModal')).hide();
+            // 데이터 새로 고침
+            loadPlayerRatings();
+        } else {
+            alert('데이터 저장 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('데이터 저장 중 오류가 발생했습니다.');
+    });
+}
+
+function convertToDateFormat(scheduleText) {
+   const listSchedule = scheduleText.split(".");
+
+   // 연도, 월, 일 추출 및 공백 제거
+   const year = listSchedule[0].trim();
+   const month = listSchedule[1].trim().padStart(2, '0');
+   const day = listSchedule[2].trim().padStart(2, '0');
+
+   // 일반 문자열 연결로 시도
+   const result = year + "-" + month + "-" + day;
+   console.log("convertToDateFormat return (concat):::", result);
+
+   return result;
 }
 
 </script>
